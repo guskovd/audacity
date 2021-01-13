@@ -100,10 +100,6 @@ public:
    void PopulateOrExchange(ShuttleGui & S);
    bool TransferDataToWindow() override;
    bool TransferDataFromWindow() override;
-
-private:
-
-   wxSpinCtrl *mQualitySpin;
 };
 
 class ExportFFmpegAMRNBOptions final : public wxPanelWrapper
@@ -248,44 +244,13 @@ private:
    wxArrayStringEx mCodecNames;
    wxArrayString mCodecLongNames;
 
-   wxChoice *mFormatChoice;
-   wxChoice *mCodecChoice;
-
    wxListBox *mFormatList;
    wxListBox *mCodecList;
 
    wxStaticText *mFormatName;
    wxStaticText *mCodecName;
 
-   wxChoice *mPresetChoice;
    wxComboBox *mPresetCombo;
-   wxSpinCtrl *mBitrateSpin;
-   wxSpinCtrl *mQualitySpin;
-   wxSpinCtrl *mSampleRateSpin;
-   wxTextCtrl *mLanguageText;
-   wxTextCtrl *mTag;
-   wxSpinCtrl *mCutoffSpin;
-   wxCheckBox *mBitReservoirCheck;
-   wxChoice *mProfileChoice;
-   //wxSpinCtrl *mTrellisSpin; //trellis is only applicable for ADPCM...scrap it.
-   wxSpinCtrl *mCompressionLevelSpin;
-   wxSpinCtrl *mFrameSizeSpin;
-   wxCheckBox *mUseLPCCheck;
-   wxSpinCtrl *mLPCCoeffsPrecisionSpin;
-   wxSpinCtrl *mMinPredictionOrderSpin;
-   wxSpinCtrl *mMaxPredictionOrderSpin;
-   wxChoice *mPredictionOrderMethodChoice;
-   wxSpinCtrl *mMinPartitionOrderSpin;
-   wxSpinCtrl *mMaxPartitionOrderSpin;
-   wxSpinCtrl *mMuxRate;
-   wxSpinCtrl *mPacketSize;
-
-   wxButton *mOk;
-   wxButton *mSavePreset;
-   wxButton *mLoadPreset;
-   wxButton *mDeletePreset;
-   wxButton *mImportPresets;
-   wxButton *mExportPresets;
 
    int mBitRateFromChoice;
    int mSampleRateFromChoice;
@@ -294,31 +259,31 @@ private:
 
    wxArrayStringEx mPresetNames;
 
-   /// Finds the format currently selected and returns it's name and description
+   /// Finds the format currently selected and returns its name and description
    void FindSelectedFormat(wxString **name, wxString **longname);
 
-   /// Finds the codec currently selected and returns it's name and description
+   /// Finds the codec currently selected and returns its name and description
    void FindSelectedCodec(wxString **name, wxString **longname);
 
-   /// Retreives format list from libavformat
+   /// Retrieves format list from libavformat
    void FetchFormatList();
 
-   /// Retreives a list of formats compatible to codec
+   /// Retrieves a list of formats compatible to codec
    ///\param id Codec ID
    ///\param selfmt format selected at the moment
    ///\return index of the selfmt in NEW format list or -1 if it is not in the list
    int FetchCompatibleFormatList(AVCodecID id, wxString *selfmt);
 
-   /// Retreives codec list from libavcodec
+   /// Retrieves codec list from libavcodec
    void FetchCodecList();
 
-   /// Retreives a list of codecs compatible to format
+   /// Retrieves a list of codecs compatible to format
    ///\param fmt Format short name
    ///\param id id of the codec selected at the moment
    ///\return index of the id in NEW codec list or -1 if it is not in the list
    int FetchCompatibleCodecList(const wxChar *fmt, AVCodecID id);
 
-   /// Retreives list of presets from configuration file
+   /// Retrieves list of presets from configuration file
    void FetchPresetList();
 
    bool ReportIfBadCombination();

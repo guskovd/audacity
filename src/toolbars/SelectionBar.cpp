@@ -246,7 +246,7 @@ void SelectionBar::Populate()
       mainSizer->Add(mChoice, 0, wxALIGN_TOP | wxEXPAND | wxRIGHT, 6);
    }
 
-   // Botton row, (mostly time controls)
+   // Bottom row, (mostly time controls)
    mRateBox = safenew wxComboBox(this, RateID,
                              wxT(""),
                              wxDefaultPosition, wxSize(80, -1));
@@ -677,8 +677,10 @@ void SelectionBar::ShowHideControls(int mode)
 
    NumericTextCtrl ** Ctrls[4]  = { &mStartTime,  &mCenterTime,  &mLengthTime,  &mEndTime};
    for(int i=0;i<4;i++){
-      if( *Ctrls[i]) 
+      if( *Ctrls[i]){ 
          (*Ctrls[i])->Show( (mask & (1<<i))!=0 );
+         (*Ctrls[i])->Refresh();
+      }
    }
 }
 

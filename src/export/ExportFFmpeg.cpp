@@ -53,6 +53,9 @@ function.
 
 #if defined(USE_FFMPEG)
 
+// Define this to automatically resample audio to the nearest supported sample rate
+#define FFMPEG_AUTO_RESAMPLE 1
+
 extern FFmpegLibs *FFmpegLibsInst();
 
 static bool CheckFFmpegPresence(bool quiet = false)
@@ -101,10 +104,10 @@ public:
    /// Callback, called from GetFilename
    bool CheckFileName(wxFileName &filename, int format = 0) override;
 
-   /// Format intialization
+   /// Format initialization
    bool Init(const char *shortname, AudacityProject *project, const Tags *metadata, int subformat);
 
-   /// Codec intialization
+   /// Codec initialization
    bool InitCodecs(AudacityProject *project);
 
    /// Writes metadata
@@ -140,7 +143,7 @@ public:
    ///\param mixerSpec mixer
    ///\param metadata tags to write into file
    ///\param subformat index of export type
-   ///\return true if export succeded
+   ///\return true if export succeeded
    ProgressResult Export(AudacityProject *project,
       std::unique_ptr<ProgressDialog> &pDialog,
       unsigned channels,
@@ -448,16 +451,6 @@ bool ExportFFmpeg::InitCodecs(AudacityProject *project)
       mEncAudioCodecCtx->bit_rate = q * 1000;
       mEncAudioCodecCtx->profile = FF_PROFILE_AAC_LOW;
       mEncAudioCodecCtx->cutoff = 0;
-      if (!CheckSampleRate(mSampleRate,
-               ExportFFmpegOptions::iAACSampleRates[0],
-               ExportFFmpegOptions::iAACSampleRates[11],
-               &ExportFFmpegOptions::iAACSampleRates[0]))
-      {
-         mSampleRate = AskResample(mEncAudioCodecCtx->bit_rate,mSampleRate,
-               ExportFFmpegOptions::iAACSampleRates[0],
-               ExportFFmpegOptions::iAACSampleRates[11],
-               &ExportFFmpegOptions::iAACSampleRates[0]);
-      }
       break;
    }
    case FMT_AC3:
@@ -477,11 +470,6 @@ bool ExportFFmpeg::InitCodecs(AudacityProject *project)
       av_dict_set(&options, "application", gPrefs->Read(wxT("/FileFormats/OPUSApplication"), wxT("audio")).ToUTF8(), 0);
       av_dict_set(&options, "cutoff", gPrefs->Read(wxT("/FileFormats/OPUSCutoff"), wxT("0")).ToUTF8(), 0);
       av_dict_set(&options, "mapping_family", mChannels <= 2 ? "0" : "255", 0);
-      if (!CheckSampleRate(mSampleRate, ExportFFmpegOPUSOptions::iOPUSSampleRates[4], ExportFFmpegOPUSOptions::iOPUSSampleRates[0], &ExportFFmpegOPUSOptions::iOPUSSampleRates[0]))
-      {
-         int bitrate = gPrefs->Read(wxT("/FileFormats/OPUSBitRate"), 128000);
-         mSampleRate = AskResample(bitrate, mSampleRate, ExportFFmpegOPUSOptions::iOPUSSampleRates[4], ExportFFmpegOPUSOptions::iOPUSSampleRates[0], &ExportFFmpegOPUSOptions::iOPUSSampleRates[0]);
-      }
       break;
    case FMT_WMA2:
       mEncAudioCodecCtx->bit_rate = gPrefs->Read(wxT("/FileFormats/WMABitRate"), 198000);
@@ -503,7 +491,7 @@ bool ExportFFmpeg::InitCodecs(AudacityProject *project)
       mEncAudioCodecCtx->compression_level = gPrefs->Read(wxT("/FileFormats/FFmpegCompLevel"),-1);
       mEncAudioCodecCtx->frame_size = gPrefs->Read(wxT("/FileFormats/FFmpegFrameSize"),(long)0);
 
-//FIXME The list of supported options for the seleced encoder should be extracted instead of a few hardcoded
+//FIXME The list of supported options for the selected encoder should be extracted instead of a few hardcoded
       set_dict_int(&options, "lpc_coeff_precision",     gPrefs->Read(wxT("/FileFormats/FFmpegLPCCoefPrec"),(long)0));
       set_dict_int(&options, "min_prediction_order",    gPrefs->Read(wxT("/FileFormats/FFmpegMinPredOrder"),(long)-1));
       set_dict_int(&options, "max_prediction_order",    gPrefs->Read(wxT("/FileFormats/FFmpegMaxPredOrder"),(long)-1));
@@ -535,7 +523,7 @@ bool ExportFFmpeg::InitCodecs(AudacityProject *project)
    mEncAudioCodecCtx->time_base.num = 1;
    mEncAudioCodecCtx->time_base.den = mEncAudioCodecCtx->sample_rate;
    mEncAudioCodecCtx->sample_fmt = AV_SAMPLE_FMT_S16;
-   mEncAudioCodecCtx->strict_std_compliance = FF_COMPLIANCE_EXPERIMENTAL;
+   mEncAudioCodecCtx->strict_std_compliance = FF_COMPLIANCE_STRICT;
 
    if (mEncAudioCodecCtx->codec_id == AV_CODEC_ID_AC3)
    {
@@ -1122,6 +1110,28 @@ void ExportFFmpeg::SetMetadata(const Tags *tags, const char *name, const wxChar 
 
 int ExportFFmpeg::AskResample(int bitrate, int rate, int lowrate, int highrate, const int *sampRates)
 {
+#if defined(FFMPEG_AUTO_RESAMPLE)
+   std::vector<int> rates;
+
+   for (int i = 0; sampRates[i]; ++i)
+   {
+      rates.push_back(sampRates[i]);
+   }
+
+   std::sort(rates.begin(), rates.end());
+
+   int bestRate = 0;
+   for (auto i : rates)
+   {
+      bestRate = i;
+      if (i > rate)
+      {
+         break;
+      }
+   }
+
+   return bestRate;
+#else
    wxDialogWrapper d(nullptr, wxID_ANY, XO("Invalid sample rate"));
    d.SetName();
    wxChoice *choice;
@@ -1188,6 +1198,7 @@ int ExportFFmpeg::AskResample(int bitrate, int rate, int lowrate, int highrate, 
    }
 
    return wxAtoi(choice->GetStringSelection());
+#endif
 }
 
 void ExportFFmpeg::OptionsCreate(ShuttleGui &S, int format)

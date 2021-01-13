@@ -136,7 +136,7 @@ void LabelGlyphHandle::HandleGlyphClick
 
       if (hit.mIsAdjustingLabel)
       {
-         float t = 0.0;
+         double t = 0.0;
          // We move if we hit the centre, we adjust one edge if we hit a chevron.
          // This is if we are moving just one edge.
          hit.mbIsMoving = (hit.mEdge & 4)!=0;
@@ -169,10 +169,18 @@ void LabelGlyphHandle::HandleGlyphClick
             // (label is shrunk to zero and size of zero is preserved)
             // If we're on a boundary between two different labels, 
             // then it's an adjust.
-            // In both cases the two points coallesce.
+            // In both cases the two points coalesce.
             hit.mbIsMoving = (hit.mMouseOverLabelLeft == hit.mMouseOverLabelRight);
-            MayAdjustLabel(hit, hit.mMouseOverLabelLeft, -1, false, t );
-            MayAdjustLabel(hit, hit.mMouseOverLabelRight, 1, false, t );
+
+            // Except!  We don't coalesce if both ends are from the same label and
+            // we have deliberately chosen to preserve length, by holding shift down.
+            if (!(hit.mbIsMoving && evt.ShiftDown()))
+            {
+               MayAdjustLabel(hit, hit.mMouseOverLabelLeft, -1, false, t);
+               MayAdjustLabel(hit, hit.mMouseOverLabelRight, 1, false, t);
+               wxASSERT(mLabels[hit.mMouseOverLabelRight].getT1() ==
+                  mLabels[hit.mMouseOverLabelLeft].getT0());
+            }
          }
          else if( hit.mMouseOverLabelRight >=0)
          {
@@ -329,7 +337,7 @@ bool LabelGlyphHandle::HandleGlyphDragRelease
       // and if both edges the same, then we're always moving the label.
       bool bLabelMoving = hit.mbIsMoving;
       bLabelMoving ^= evt.ShiftDown();
-      //bLabelMoving |= ( hit.mMouseOverLabelLeft == hit.mMouseOverLabelRight );
+      bLabelMoving |= ( hit.mMouseOverLabelLeft == hit.mMouseOverLabelRight );
       double fNewX = zoomInfo.PositionToTime(x, 0);
       if( bLabelMoving )
       {

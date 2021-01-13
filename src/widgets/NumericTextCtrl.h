@@ -34,7 +34,7 @@ DECLARE_EXPORTED_EVENT_TYPE(AUDACITY_DLL_API, EVT_FREQUENCYTEXTCTRL_UPDATED, -1)
 DECLARE_EXPORTED_EVENT_TYPE(AUDACITY_DLL_API, EVT_BANDWIDTHTEXTCTRL_UPDATED,
                             -1);
 
-/** \brief struct to hold a formatting control string and it's user facing name
+/** \brief struct to hold a formatting control string and its user facing name
  * Used in an array to hold the built-in time formats that are always available
  * to the user */
 struct BuiltinFormatString;
@@ -192,8 +192,8 @@ class NumericTextCtrl final : public wxControl, public NumericConverter
    // Hide the inherited function that takes wxString
    void SetName( const TranslatableString &name );
 
+   wxSize ComputeSizing(bool update = true, wxCoord digitW = 0, wxCoord digitH = 0);
    bool Layout() override;
-   void ComputeSizing();
    void Fit() override;
 
    void SetSampleRate(double sampleRate);
@@ -207,6 +207,8 @@ class NumericTextCtrl final : public wxControl, public NumericConverter
 
    void SetFieldFocus(int /* digit */);
 
+   wxSize GetDimensions() { return wxSize(mWidth + mButtonWidth, mHeight); }
+   wxSize GetDigitSize() { return wxSize(mDigitBoxW, mDigitBoxH); }
    void SetDigitSize(int width, int height);
    void SetReadOnly(bool readOnly = true);
    void EnableMenu(bool enable = true);
@@ -219,11 +221,6 @@ class NumericTextCtrl final : public wxControl, public NumericConverter
 
    int GetFocusedField() { return mLastField; }
    int GetFocusedDigit() { return mFocusedDigit; }
-   // give a sane aspect ratio even if zero height.
-   bool IsTooBig(int width, int height) {
-      ComputeSizing();
-      return (mWidth > width) || (mHeight > height);
-   }
 
 private:
 

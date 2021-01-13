@@ -992,7 +992,7 @@ KeyView::RefreshLines(bool bSort)
             node.line = linecnt++;
             mLines.push_back(&node);
 
-            // If this node is not open, then skip all of it's decendants
+            // If this node is not open, then skip all of its decendants
             if (!node.isopen)
             {
                bool iscat = node.iscat;
@@ -1113,7 +1113,7 @@ KeyView::SelectNode(int index)
 
    // Always send an event to let parent know of selection change
    //
-   // Must do this ourselves becuase we want to send notifications
+   // Must do this ourselves because we want to send notifications
    // even if there isn't an item selected and SendSelectedEvent()
    // doesn't allow sending an event for indexes not in the listbox.
    wxCommandEvent event(wxEVT_COMMAND_LISTBOX_SELECTED, GetId());
@@ -1678,7 +1678,7 @@ KeyView::OnLeftDown(wxMouseEvent & event)
 // order as they appear in the menus.  But, we want to sort the
 // "command" nodes.
 //
-// To accomplish this, we prepend each label with it's line number
+// To accomplish this, we prepend each label with its line number
 // (in hex) for "menu" nodes.  This ensures they will remain in
 // their original order.
 //
@@ -1743,7 +1743,7 @@ KeyView::CmpKeyNodeByName(KeyNode *t1, KeyNode *t2)
 // at the top of the list and all nodes without assignment to appear in
 // ascending order at the bottom of the list.
 //
-// We accomplish this by by prefixing all non-assigned entries with 0xff.
+// We accomplish this by prefixing all non-assigned entries with 0xff.
 // This will force them to the end, but still allow them to be sorted in
 // ascending order.
 //

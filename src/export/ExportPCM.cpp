@@ -365,7 +365,7 @@ void ExportPCMOptions::GetEncodings(int enc)
       if (sf_format_check(&info))
       {
          // If this subtype matches our last saved encoding, remember
-         // it's index so we can set it in the dialog.
+         // its index so we can set it in the dialog.
          if (sub == enc)
          {
             mEncodingFromChoice = mEncodingIndexes.size();
@@ -514,6 +514,12 @@ ProgressResult ExportPCM::Export(AudacityProject *project,
    if (!(sf_format & SF_FORMAT_SUBMASK))
    {
       sf_format |= LoadEncoding(sf_format);
+   }
+
+   // If subtype is still not specified, supply a default.
+   if (!(sf_format & SF_FORMAT_SUBMASK))
+   {
+      sf_format |= SF_FORMAT_PCM_16;
    }
 
    int fileFormat = sf_format & SF_FORMAT_TYPEMASK;

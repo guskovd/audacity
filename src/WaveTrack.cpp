@@ -530,10 +530,12 @@ void WaveTrack::Trim (double t0, double t1)
 
 
 
-WaveTrack::Holder WaveTrack::EmptyCopy() const
+WaveTrack::Holder WaveTrack::EmptyCopy(
+   const std::shared_ptr<DirManager> &pDirManager ) const
 {
    auto result = std::make_shared<WaveTrack>( mDirManager, mFormat, mRate );
    result->Init(*this);
+   result->mDirManager = pDirManager ? pDirManager : mDirManager;
    return result;
 }
 
@@ -702,7 +704,7 @@ void WaveTrack::SetWaveformSettings(std::unique_ptr<WaveformSettings> &&pSetting
 // followed by Paste() and is used mostly by effects that
 // can't replace track data directly using Get()/Set().
 //
-// HandleClear() removes any cut/split lines lines with the
+// HandleClear() removes any cut/split lines with the
 // cleared range, but, in most cases, effects want to preserve
 // the existing cut/split lines, so they are saved before the
 // HandleClear()/Paste() and restored after.
@@ -1919,7 +1921,7 @@ bool WaveTrack::Get(samplePtr buffer, sampleFormat format,
             // startDelta is zero
          }
          else {
-            // startDelta is nonnegative and less than than len
+            // startDelta is nonnegative and less than len
             // samplesToCopy is positive and not more than len
          }
 
@@ -1967,7 +1969,7 @@ void WaveTrack::Set(samplePtr buffer, sampleFormat format,
             // startDelta is zero
          }
          else {
-            // startDelta is nonnegative and less than than len
+            // startDelta is nonnegative and less than len
             // samplesToCopy is positive and not more than len
          }
 

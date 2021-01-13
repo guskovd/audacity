@@ -11,7 +11,7 @@
 
   The difficulty in our approach is that we are attempting to use LAME
   in a way it was not designed to be used. LAME's API is reasonably
-  consistant, so if we were linking directly against it we could expect
+  consistent, so if we were linking directly against it we could expect
   this code to work with a variety of different LAME versions. However,
   the data structures change from version to version, and so linking
   with one version of the header and dynamically linking against a
@@ -700,20 +700,20 @@ typedef lame_global_flags *lame_init_t(void);
 typedef int lame_init_params_t(lame_global_flags*);
 typedef const char* get_lame_version_t(void);
 
-typedef int lame_encode_buffer_t (
-      lame_global_flags* gf,
-      const short int    buffer_l [],
-      const short int    buffer_r [],
-      const int          nsamples,
-      unsigned char *    mp3buf,
-      const int          mp3buf_size );
+typedef int CDECL lame_encode_buffer_ieee_float_t(
+      lame_t          gfp,
+      const float     pcm_l[],
+      const float     pcm_r[],
+      const int       nsamples,
+      unsigned char * mp3buf,
+      const int       mp3buf_size);
 
-typedef int lame_encode_buffer_interleaved_t(
-      lame_global_flags* gf,
-      short int          pcm[],
-      int                num_samples,   /* per channel */
-      unsigned char*     mp3buf,
-      int                mp3buf_size );
+typedef int CDECL lame_encode_buffer_interleaved_ieee_float_t(
+      lame_t          gfp,
+      const float     pcm[],
+      const int       nsamples,
+      unsigned char * mp3buf,
+      const int       mp3buf_size);
 
 typedef int lame_encode_flush_t(
       lame_global_flags *gf,
@@ -734,7 +734,6 @@ typedef int lame_set_mode_t(lame_global_flags *, MPEG_mode);
 typedef int lame_set_preset_t(lame_global_flags *, int);
 typedef int lame_set_error_protection_t(lame_global_flags *, int);
 typedef int lame_set_disable_reservoir_t(lame_global_flags *, int);
-typedef int lame_set_padding_type_t(lame_global_flags *, Padding_type);
 typedef int lame_set_bWriteVbrTag_t(lame_global_flags *, int);
 typedef size_t lame_get_lametag_frame_t(const lame_global_flags *, unsigned char* buffer, size_t size);
 typedef void lame_mp3_tags_fid_t(lame_global_flags *, FILE *);
@@ -826,12 +825,12 @@ public:
    int GetOutBufferSize();
 
    /* returns the number of bytes written. input is interleaved if stereo*/
-   int EncodeBuffer(short int inbuffer[], unsigned char outbuffer[]);
-   int EncodeRemainder(short int inbuffer[], int nSamples,
+   int EncodeBuffer(float inbuffer[], unsigned char outbuffer[]);
+   int EncodeRemainder(float inbuffer[], int nSamples,
                        unsigned char outbuffer[]);
 
-   int EncodeBufferMono(short int inbuffer[], unsigned char outbuffer[]);
-   int EncodeRemainderMono(short int inbuffer[], int nSamples,
+   int EncodeBufferMono(float inbuffer[], unsigned char outbuffer[]);
+   int EncodeRemainderMono(float inbuffer[], int nSamples,
                            unsigned char outbuffer[]);
 
    int FinishStream(unsigned char outbuffer[]);
@@ -863,8 +862,8 @@ private:
    /* function pointers to the symbols we get from the library */
    lame_init_t* lame_init;
    lame_init_params_t* lame_init_params;
-   lame_encode_buffer_t* lame_encode_buffer;
-   lame_encode_buffer_interleaved_t* lame_encode_buffer_interleaved;
+   lame_encode_buffer_ieee_float_t* lame_encode_buffer_ieee_float;
+   lame_encode_buffer_interleaved_ieee_float_t* lame_encode_buffer_interleaved_ieee_float;
    lame_encode_flush_t* lame_encode_flush;
    lame_close_t* lame_close;
    get_lame_version_t* get_lame_version;
@@ -881,7 +880,6 @@ private:
    lame_set_preset_t* lame_set_preset;
    lame_set_error_protection_t* lame_set_error_protection;
    lame_set_disable_reservoir_t *lame_set_disable_reservoir;
-   lame_set_padding_type_t *lame_set_padding_type;
    lame_set_bWriteVbrTag_t *lame_set_bWriteVbrTag;
    lame_get_lametag_frame_t *lame_get_lametag_frame;
    lame_mp3_tags_fid_t *lame_mp3_tags_fid;
@@ -1085,8 +1083,8 @@ bool MP3Exporter::InitLibraryInternal()
    lame_init = ::lame_init;
    get_lame_version = ::get_lame_version;
    lame_init_params = ::lame_init_params;
-   lame_encode_buffer = ::lame_encode_buffer;
-   lame_encode_buffer_interleaved = ::lame_encode_buffer_interleaved;
+   lame_encode_buffer_ieee_float = ::lame_encode_buffer_ieee_float;
+   lame_encode_buffer_interleaved_ieee_float = ::lame_encode_buffer_interleaved_ieee_float;
    lame_encode_flush = ::lame_encode_flush;
    lame_close = ::lame_close;
 
@@ -1102,7 +1100,6 @@ bool MP3Exporter::InitLibraryInternal()
    lame_set_preset = ::lame_set_preset;
    lame_set_error_protection = ::lame_set_error_protection;
    lame_set_disable_reservoir = ::lame_set_disable_reservoir;
-   lame_set_padding_type = ::lame_set_padding_type;
    lame_set_bWriteVbrTag = ::lame_set_bWriteVbrTag;
 
    // These are optional
@@ -1146,10 +1143,10 @@ bool MP3Exporter::InitLibraryExternal(wxString libpath)
       lame_lib.GetSymbol(wxT("get_lame_version"));
    lame_init_params = (lame_init_params_t *)
       lame_lib.GetSymbol(wxT("lame_init_params"));
-   lame_encode_buffer = (lame_encode_buffer_t *)
-      lame_lib.GetSymbol(wxT("lame_encode_buffer"));
-   lame_encode_buffer_interleaved = (lame_encode_buffer_interleaved_t *)
-      lame_lib.GetSymbol(wxT("lame_encode_buffer_interleaved"));
+   lame_encode_buffer_ieee_float = (lame_encode_buffer_ieee_float_t *)
+      lame_lib.GetSymbol(wxT("lame_encode_buffer_ieee_float"));
+   lame_encode_buffer_interleaved_ieee_float = (lame_encode_buffer_interleaved_ieee_float_t *)
+      lame_lib.GetSymbol(wxT("lame_encode_buffer_interleaved_ieee_float"));
    lame_encode_flush = (lame_encode_flush_t *)
       lame_lib.GetSymbol(wxT("lame_encode_flush"));
    lame_close = (lame_close_t *)
@@ -1179,8 +1176,6 @@ bool MP3Exporter::InitLibraryExternal(wxString libpath)
        lame_lib.GetSymbol(wxT("lame_set_error_protection"));
    lame_set_disable_reservoir = (lame_set_disable_reservoir_t *)
        lame_lib.GetSymbol(wxT("lame_set_disable_reservoir"));
-   lame_set_padding_type = (lame_set_padding_type_t *)
-       lame_lib.GetSymbol(wxT("lame_set_padding_type"));
    lame_set_bWriteVbrTag = (lame_set_bWriteVbrTag_t *)
        lame_lib.GetSymbol(wxT("lame_set_bWriteVbrTag"));
 
@@ -1199,8 +1194,8 @@ bool MP3Exporter::InitLibraryExternal(wxString libpath)
    if (!lame_init ||
       !get_lame_version ||
       !lame_init_params ||
-      !lame_encode_buffer ||
-      !lame_encode_buffer_interleaved ||
+      !lame_encode_buffer_ieee_float ||
+      !lame_encode_buffer_interleaved_ieee_float ||
       !lame_encode_flush ||
       !lame_close ||
       !lame_set_in_samplerate ||
@@ -1214,7 +1209,6 @@ bool MP3Exporter::InitLibraryExternal(wxString libpath)
       !lame_set_preset ||
       !lame_set_error_protection ||
       !lame_set_disable_reservoir ||
-      !lame_set_padding_type ||
       !lame_set_bWriteVbrTag)
    {
       wxLogMessage(wxT("Failed to find a required symbol in the LAME library."));
@@ -1289,11 +1283,6 @@ int MP3Exporter::InitializeStream(unsigned channels, int sampleRate)
    lame_set_in_samplerate(mGF, sampleRate);
    lame_set_out_samplerate(mGF, sampleRate);
    lame_set_disable_reservoir(mGF, false);
-#ifndef DISABLE_DYNAMIC_LOADING_LAME
-// TODO: Make this configurable (detect the existance of this function)
-   lame_set_padding_type(mGF, PAD_NO);
-#endif // DISABLE_DYNAMIC_LOADING_LAME
-
    // Add the VbrTag for all types.  For ABR/VBR, a Xing tag will be created.
    // For CBR, it will be a Lame Info tag.
    lame_set_bWriteVbrTag(mGF, true);
@@ -1386,45 +1375,45 @@ int MP3Exporter::GetOutBufferSize()
    return mOutBufferSize;
 }
 
-int MP3Exporter::EncodeBuffer(short int inbuffer[], unsigned char outbuffer[])
+int MP3Exporter::EncodeBuffer(float inbuffer[], unsigned char outbuffer[])
 {
    if (!mEncoding) {
       return -1;
    }
 
-   return lame_encode_buffer_interleaved(mGF, inbuffer, mSamplesPerChunk,
+   return lame_encode_buffer_interleaved_ieee_float(mGF, inbuffer, mSamplesPerChunk,
       outbuffer, mOutBufferSize);
 }
 
-int MP3Exporter::EncodeRemainder(short int inbuffer[], int nSamples,
+int MP3Exporter::EncodeRemainder(float inbuffer[], int nSamples,
                   unsigned char outbuffer[])
 {
    if (!mEncoding) {
       return -1;
    }
 
-   return lame_encode_buffer_interleaved(mGF, inbuffer, nSamples, outbuffer,
+   return lame_encode_buffer_interleaved_ieee_float(mGF, inbuffer, nSamples, outbuffer,
       mOutBufferSize);
 }
 
-int MP3Exporter::EncodeBufferMono(short int inbuffer[], unsigned char outbuffer[])
+int MP3Exporter::EncodeBufferMono(float inbuffer[], unsigned char outbuffer[])
 {
    if (!mEncoding) {
       return -1;
    }
 
-   return lame_encode_buffer(mGF, inbuffer,inbuffer, mSamplesPerChunk,
+   return lame_encode_buffer_ieee_float(mGF, inbuffer,inbuffer, mSamplesPerChunk,
       outbuffer, mOutBufferSize);
 }
 
-int MP3Exporter::EncodeRemainderMono(short int inbuffer[], int nSamples,
+int MP3Exporter::EncodeRemainderMono(float inbuffer[], int nSamples,
                   unsigned char outbuffer[])
 {
    if (!mEncoding) {
       return -1;
    }
 
-   return lame_encode_buffer(mGF, inbuffer, inbuffer, nSamples, outbuffer,
+   return lame_encode_buffer_ieee_float(mGF, inbuffer, inbuffer, nSamples, outbuffer,
       mOutBufferSize);
 }
 
@@ -1914,7 +1903,7 @@ ProgressResult ExportMP3::Export(AudacityProject *project,
       auto mixer = CreateMixer(tracks, selectionOnly,
          t0, t1,
          channels, inSamples, true,
-         rate, int16Sample, true, mixerSpec);
+         rate, floatSample, true, mixerSpec);
 
       TranslatableString title;
       if (rmode == MODE_SET) {
@@ -1946,7 +1935,7 @@ ProgressResult ExportMP3::Export(AudacityProject *project,
             break;
          }
 
-         short *mixed = (short *)mixer->GetBuffer();
+         float *mixed = (float *)mixer->GetBuffer();
 
          if ((int)blockLen < inSamples) {
             if (channels > 1) {

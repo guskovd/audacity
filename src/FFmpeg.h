@@ -375,7 +375,7 @@ private:
 FFmpegLibs *PickFFmpegLibs();
 
 ///! Helper function - destroys FFmpegLibs object if there is no need for it
-///! anymore, or just decrements it's reference count
+///! anymore, or just decrements its reference count
 void        DropFFmpegLibs();
 
 // This object allows access to the AVFormatContext,
@@ -430,12 +430,12 @@ extern "C" {
    //
    // The FFMPEG_FUNCTION_WITH_RETURN takes 4 arguments:
    // 1)  The return type           <---|
-   // 2)  The function name             | Taken from the FFmpeg funciton prototype
+   // 2)  The function name             | Taken from the FFmpeg function prototype
    // 3)  The function arguments    <---|
    // 4)  The argument list to pass to the real function
    //
    // The FFMPEG_FUNCTION_NO_RETURN takes 3 arguments:
-   // 1)  The function name         <---| Taken from the FFmpeg funciton prototype
+   // 1)  The function name         <---| Taken from the FFmpeg function prototype
    // 2)  The function arguments    <---|
    // 3)  The argument list to pass to the real function
    //

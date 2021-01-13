@@ -160,7 +160,12 @@ private:
 
    // Make another track copying format, rate, color, etc. but containing no
    // clips
-   Holder EmptyCopy() const;
+   // It is important to pass the correct DirManager (that for the project
+   // which will own the copy) in the unusual case that a track is copied from
+   // another project or the clipboard.  For copies within one project, the
+   // default will do.
+   Holder EmptyCopy(
+      const std::shared_ptr<DirManager> &pDirManager = {} ) const;
 
    // If forClipboard is true,
    // and there is no clip at the end time of the selection, then the result
@@ -230,7 +235,7 @@ private:
 
    ///
    /// MM: Now that each wave track can contain multiple clips, we don't
-   /// have a continous space of samples anymore, but we simulate it,
+   /// have a continuous space of samples anymore, but we simulate it,
    /// because there are alot of places (e.g. effects) using this interface.
    /// This interface makes much sense for modifying samples, but note that
    /// it is not time-accurate, because the "offset" is a double value and
@@ -352,7 +357,7 @@ private:
    double LongSamplesToTime(sampleCount pos) const;
 
    // Get access to the (visible) clips in the tracks, in unspecified order
-   // (not necessarioy sequenced in time).
+   // (not necessarily sequenced in time).
    WaveClipHolders &GetClips() { return mClips; }
    const WaveClipConstHolders &GetClips() const
       { return reinterpret_cast< const WaveClipConstHolders& >( mClips ); }

@@ -87,6 +87,8 @@ ExportCLOptions::ExportCLOptions(wxWindow *parent, int WXUNUSED(format))
    mHistory.Load(*gPrefs, wxT("/FileFormats/ExternalProgramHistory"));
 
    if (mHistory.GetCount() == 0) {
+      mHistory.AddFileToHistory(wxT("ffmpeg -i - \"%f.opus\""), false);
+      mHistory.AddFileToHistory(wxT("ffmpeg -i - \"%f.wav\""), false);
       mHistory.AddFileToHistory(wxT("ffmpeg -i - \"%f\""), false);
       mHistory.AddFileToHistory(wxT("lame - \"%f\""), false);
    }
@@ -149,7 +151,7 @@ void ExportCLOptions::PopulateOrExchange(ShuttleGui & S)
    and "standard in" means the default input stream that the external program,
    named by %f, will read.  And yes, it's %f, not %s -- this isn't actually used
    in the program as a format string.  Keep %f unchanged. */
-"Data will be piped to standard in. \"%f\" uses the file name in the export window."));
+"Data will be piped to standard in. \"%f\" uses the file name in the export window."), 250);
    }
    S.EndVerticalLay();
 }
@@ -356,7 +358,7 @@ ExportCL::ExportCL()
    SetFormat(wxT("CL"),0);
    AddExtension(wxT(""),0);
    SetMaxChannels(255,0);
-   SetCanMetaData(true,0);
+   SetCanMetaData(false,0);
    SetDescription(XO("(external program)"),0);
 }
 
@@ -545,7 +547,7 @@ ProgressResult ExportCL::Export(AudacityProject *project,
             mixed = mixer->GetBuffer();
             numBytes = numSamples * channels;
 
-            // Byte-swapping is neccesary on big-endian machines, since
+            // Byte-swapping is necessary on big-endian machines, since
             // WAV files are little-endian
 #if wxBYTE_ORDER == wxBIG_ENDIAN
             float *buffer = (float *) mixed;
@@ -595,7 +597,7 @@ ProgressResult ExportCL::Export(AudacityProject *project,
 
       ShuttleGui S(&dlg, eIsCreating);
       S
-         .Style( wxTE_MULTILINE | wxTE_READONLY )
+         .Style( wxTE_MULTILINE | wxTE_READONLY | wxTE_RICH )
          .AddTextWindow(mCmd + wxT("\n\n") + output);
       S.StartHorizontalLay(wxALIGN_CENTER, false);
       {

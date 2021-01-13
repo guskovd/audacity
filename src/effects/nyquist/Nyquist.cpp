@@ -309,9 +309,6 @@ bool NyquistEffect::DefineParams( ShuttleParams & S )
    auto pSa = dynamic_cast<ShuttleSetAutomation*>(&S);
    if( pSa ){
       SetAutomationParameters( *(pSa->mpEap) );
-      if (pSa->bWrite && !mInputCmd.empty()) {
-         ParseCommand(mInputCmd);
-      }
       return true;
    }
    auto pSd  = dynamic_cast<ShuttleGetDefinition*>(&S);
@@ -369,8 +366,11 @@ bool NyquistEffect::DefineParams( ShuttleParams & S )
 
 bool NyquistEffect::GetAutomationParameters(CommandParameters & parms)
 {
-   if (mExternal)
+   if (IsBatchProcessing())
    {
+      parms.Write(KEY_Command, mInputCmd);
+      parms.Write(KEY_Version, mVersion);
+
       return true;
    }
 
@@ -423,8 +423,18 @@ bool NyquistEffect::GetAutomationParameters(CommandParameters & parms)
 
 bool NyquistEffect::SetAutomationParameters(CommandParameters & parms)
 {
-   if (mExternal)
+   if (IsBatchProcessing())
    {
+      parms.Read(KEY_Command, &mInputCmd, wxEmptyString);
+      parms.Read(KEY_Version, &mVersion, mVersion);
+
+      if (!mInputCmd.empty()) {
+         ParseCommand(mInputCmd);
+      }
+      mPromptType = mType;
+      mIsTool = (GetType() == EffectTypeTool);
+      mExternal = true;
+
       return true;
    }
 
@@ -432,6 +442,14 @@ bool NyquistEffect::SetAutomationParameters(CommandParameters & parms)
    {
       parms.Read(KEY_Command, &mInputCmd, wxEmptyString);
       parms.Read(KEY_Version, &mVersion, mVersion);
+
+      if (!mInputCmd.empty()) {
+         ParseCommand(mInputCmd);
+      }
+      mType = EffectTypeTool;
+      mPromptType = mType;
+      mIsTool = true;
+      mExternal = true;
 
       return true;
    }
@@ -526,8 +544,6 @@ bool NyquistEffect::SetAutomationParameters(CommandParameters & parms)
 
 bool NyquistEffect::Init()
 {
-   mDelegate.reset();
-
    // When Nyquist Prompt spawns an effect GUI, Init() is called for Nyquist Prompt,
    // and then again for the spawned (mExternal) effect.
 
@@ -602,21 +618,17 @@ bool NyquistEffect::Init()
    return true;
 }
 
+bool NyquistEffect::CheckWhetherSkipEffect()
+{
+   // If we're a prompt and we have controls, then we've already processed
+   // the audio, so skip further processing.
+   return (mIsPrompt && mControls.size() > 0);
+}
+
 static void RegisterFunctions();
 
 bool NyquistEffect::Process()
 {
-   if (mDelegate)
-   {
-      mProgress->Hide();
-      auto &effect = *mDelegate;
-      auto result = Delegate( effect );
-      mT0 = effect.mT0;
-      mT1 = effect.mT1;
-      mDelegate.reset();
-      return result;
-   }
-
    // Check for reentrant Nyquist commands.
    // I'm choosing to mark skipped Nyquist commands as successful even though
    // they are skipped.  The reason is that when Nyquist calls out to a chain,
@@ -635,6 +647,10 @@ bool NyquistEffect::Process()
    mProjectChanged = false;
    EffectManager & em = EffectManager::Get();
    em.SetSkipStateFlag(false);
+
+   if (mExternal) {
+      mProgress->Hide();
+   }
 
    mOutputTime = 0;
    mCount = 0;
@@ -998,14 +1014,14 @@ bool NyquistEffect::ShowInterface(
       return res;
    }
 
-   // Come here only in case the user entered a script into the Nyquist
-   // prompt window that included the magic comments that specify controls.
-   // Interpret those comments and put up a second dialog.
-   mDelegate = std::make_unique< NyquistEffect >( NYQUIST_WORKER_ID );
-   auto &effect = *mDelegate;
+   NyquistEffect effect(NYQUIST_WORKER_ID);
+
    effect.SetCommand(mInputCmd);
    effect.mDebug = (mUIResultID == eDebugID);
-   return effect.ShowInterface( parent, factory, forceModal );
+   bool result = Delegate(effect, parent, factory);
+   mT0 = effect.mT0;
+   mT1 = effect.mT1;
+   return result;
 }
 
 void NyquistEffect::PopulateOrExchange(ShuttleGui & S)
@@ -1430,10 +1446,12 @@ bool NyquistEffect::ProcessOne()
       // if necessary, by gettext or ngettext defined below, before it is
       // communicated back to C++
       auto msg = Verbatim( NyquistToWxString(nyx_get_string()) );
-      if (!msg.empty())  // Empty string may be used as a No-Op return value.
+      if (!msg.empty()) { // Empty string may be used as a No-Op return value.
          Effect::MessageBox( msg );
-      else
+      }
+      else {
          return true;
+      }
 
       // True if not process type.
       // If not returning audio from process effect,
@@ -3238,7 +3256,7 @@ NyquistOutputDialog::NyquistOutputDialog(wxWindow * parent, wxWindowID id,
       S.Prop( 1 )
          .Position(wxEXPAND | wxALL)
          .MinSize( { 480, 250 } )
-         .Style(wxTE_MULTILINE | wxTE_READONLY)
+         .Style(wxTE_MULTILINE | wxTE_READONLY | wxTE_RICH)
          .AddTextWindow( message.Translation() );
 
       S.SetBorder( 5 );

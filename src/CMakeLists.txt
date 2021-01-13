@@ -22,9 +22,10 @@ if( GIT_FOUND )
       version
       COMMAND
          ${CMAKE_COMMAND} -D GIT=${GIT_EXECUTABLE}
+                          -D _PRVDIR=${_PRVDIR}
                           -P ${CMAKE_MODULE_PATH}/Version.cmake
       WORKING_DIRECTORY
-         ${_PRVDIR}
+         ${topdir}
    )
    add_dependencies( ${TARGET} version )
 endif()
@@ -1100,7 +1101,6 @@ if( CMAKE_VERSION VERSION_GREATER_EQUAL "3.16" AND NOT CCACHE_PROGRAM )
    set( PRECOMP AudacityHeaders.h )
 endif()
 
-set( AUDACITY_NAME "Audacity" )
 set( BUILDING_AUDACITY YES )
 set( INSTALL_PREFIX "${_PREFIX}" )
 set( PKGLIBDIR "${_LIBDIR}" )
@@ -1121,8 +1121,6 @@ if( NOT CMAKE_SYSTEM_NAME MATCHES "Windows|Darwin" )
 endif()
 
 if( CMAKE_SYSTEM_NAME MATCHES "Windows" )
-   set( _EXE "Audacity" )
-
    set_target_properties(
       ${TARGET}
       PROPERTIES
@@ -1176,7 +1174,7 @@ if( CMAKE_SYSTEM_NAME MATCHES "Windows" )
       TARGET
          ${TARGET}
       COMMAND
-         ${_INTDIR}/copy_libs.bat ${exedir} ${_EXE}.exe
+         ${_INTDIR}/copy_libs.bat ${exedir} ${AUDACITY_NAME}.exe
       POST_BUILD
    )
 
@@ -1189,7 +1187,22 @@ if( CMAKE_SYSTEM_NAME MATCHES "Windows" )
       POST_BUILD
    )
 elseif( CMAKE_SYSTEM_NAME MATCHES "Darwin" )
-   set( _EXE "Audacity" )
+   # Bug 2400 workaround
+   #
+   # Replaces the SDK version in the built executable with 10.13 to
+   # prevent high CPU usage and slow drawing on Mojave or newer
+   check_for_platform_version()
+   if( PLATFORM_VERSION_SUPPORTED )
+      list( APPEND LDFLAGS
+         PRIVATE
+            -Wl,-platform_version,macos,10.7,10.13
+      )
+   else()
+      list( APPEND LDFLAGS
+         PRIVATE
+            -Wl,-sdk_version,10.13
+      )
+   endif()
 
    # Define Mac specific resources
    list( APPEND MAC_RESOURCES
@@ -1248,7 +1261,7 @@ elseif( CMAKE_SYSTEM_NAME MATCHES "Darwin" )
          TARGET
             ${TARGET}
          COMMAND
-            sh -c "TARGET_BUILD_DIR=${_DEST} EXECUTABLE_PATH=MacOS/${_EXE} FRAMEWORKS_FOLDER_PATH=Frameworks ${topdir}/mac/scripts/install_wxlibs.sh"
+            sh -c "TARGET_BUILD_DIR=${_DEST} EXECUTABLE_PATH=MacOS/${AUDACITY_NAME} FRAMEWORKS_FOLDER_PATH=Frameworks ${topdir}/mac/scripts/install_wxlibs.sh"
          POST_BUILD
       )
    endif()
@@ -1258,14 +1271,12 @@ elseif( CMAKE_SYSTEM_NAME MATCHES "Darwin" )
    set( WRAPPER_SOURCES "${WRAPPER_ROOT}/Wrapper.c" )
 
    add_executable( Wrapper "${WRAPPER_SOURCES}" )
-   add_dependencies( Wrapper "${TARGET}" )
+   add_dependencies( "${TARGET}" Wrapper )
 
    set_target_property_all( "Wrapper" RUNTIME_OUTPUT_DIRECTORY "${_EXEDIR}" )
    organize_source( "${WRAPPER_ROOT}" "mac" "${WRAPPER_SOURCES}" )
 
 else()
-   set( _EXE "audacity" )
-
    set_target_property_all( ${TARGET} RUNTIME_OUTPUT_DIRECTORY "${_DESTDIR}" )
 
    # Create the config file
@@ -1311,13 +1322,12 @@ else()
    endif()
 
    # Create the desktop file
-   set( AUDACITY_NAME "${_EXE}" )
    configure_file( audacity.desktop.in ${_INTDIR}/audacity.desktop )
 
    # Create the script to copy required wxWidgets libraries
    if( ${_OPT}use_wxwidgets STREQUAL "local" )
       file( WRITE "${_INTDIR}/copy_libs.sh"
-         "for lib in \$(ldd ${_EXEDIR}/${_EXE} | awk '/libwx/{print \$1}')
+         "for lib in \$(ldd ${_EXEDIR}/${AUDACITY_NAME} | awk '/libwx/{print \$1}')
           do
              echo \${lib}
              ldd ${WXWIN}/lib/\${lib} | awk '/libwx/{print \$1}'
@@ -1338,7 +1348,7 @@ else()
    endif()
 endif()
 
-set_target_property_all( ${TARGET} RUNTIME_OUTPUT_NAME ${_EXE} )
+set_target_property_all( ${TARGET} RUNTIME_OUTPUT_NAME ${AUDACITY_NAME} )
 
 organize_source( "${TARGET_ROOT}/.." "include" "${HEADERS}" )
 organize_source( "${TARGET_ROOT}/../presets" "presets" "${RESOURCES}" )
@@ -1363,7 +1373,7 @@ target_sources( ${TARGET} PRIVATE ${HEADERS} ${SOURCES} ${RESOURCES} ${MAC_RESOU
 target_compile_definitions( ${TARGET} PRIVATE ${DEFINES} )
 target_compile_options( ${TARGET} PRIVATE ${OPTIONS} )
 target_include_directories( ${TARGET} PRIVATE ${INCLUDES} )
-target_link_options( "${TARGET}" PRIVATE ${LDFLAGS} )
+target_link_options( ${TARGET} PRIVATE ${LDFLAGS} )
 target_link_libraries( ${TARGET} PRIVATE ${LIBRARIES} )
 
 if( PRECOMP )
@@ -1374,15 +1384,19 @@ if( NOT "${CMAKE_GENERATOR}" MATCHES "Xcode|Visual Studio*" )
    if( CMAKE_SYSTEM_NAME MATCHES "Darwin" )
       install( FILES "${_DEST}/Info.plist"
                DESTINATION "${CMAKE_INSTALL_BINDIR}/Audacity.app/Contents" )
-      install( PROGRAMS "${_EXEDIR}/${_EXE}" "${_EXEDIR}/Wrapper"
+      install( PROGRAMS "${_EXEDIR}/${AUDACITY_NAME}" "${_EXEDIR}/Wrapper"
                DESTINATION "${CMAKE_INSTALL_BINDIR}/Audacity.app/Contents/MacOS" )
    else()
-      install( PROGRAMS "${_EXEDIR}/${_EXE}"
+      install( PROGRAMS "${_EXEDIR}/${AUDACITY_NAME}"
                TYPE BIN )
+      install( DIRECTORY "${_DESTDIR}/${_LIBDIR}/"
+               DESTINATION "${_LIBDIR}"
+               USE_SOURCE_PERMISSIONS
+               FILES_MATCHING PATTERN "*.so" )
       install( FILES "${_INTDIR}/audacity.desktop"
                DESTINATION "${_DATADIR}/applications" )
       install( FILES "${topdir}/LICENSE.txt" "${topdir}/README.txt"
-               DESTINATION "${_DATADIR}/doc" )
+               DESTINATION "${_DATADIR}/doc/${AUDACITY_NAME}" )
       install( FILES "${_SRCDIR}/audacity.xml"
                DESTINATION "${_DATADIR}/mime/packages" )
       install( FILES "${topdir}/presets/EQDefaultCurves.xml"

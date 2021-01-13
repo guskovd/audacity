@@ -22,7 +22,7 @@ It handles initialization and termination by subclassing wxApp.
 
 #if 0
 // This may be used to debug memory leaks.
-// See: Visual Leak Dectector @ http://vld.codeplex.com/
+// See: Visual Leak Detector @ http://vld.codeplex.com/
 #include <vld.h>
 #endif
 
@@ -108,6 +108,10 @@ It handles initialization and termination by subclassing wxApp.
 #include "prefs/GUIPrefs.h"
 #include "tracks/ui/Scrubbing.h"
 #include "widgets/FileHistory.h"
+
+#if defined(__WXMAC__)
+#include "menus/WindowMenus.h"
+#endif
 
 #ifdef EXPERIMENTAL_EASY_CHANGE_KEY_BINDINGS
 #include "prefs/KeyConfigPrefs.h"
@@ -885,6 +889,11 @@ BEGIN_EVENT_TABLE(AudacityApp, wxApp)
    EVT_MENU_RANGE(FileHistory::ID_RECENT_FIRST, FileHistory::ID_RECENT_LAST,
       AudacityApp::OnMRUFile)
 
+#if defined(__WXMAC__)
+   // Window menu event handlers.
+   EVT_MENU_RANGE(WindowActions::ID_BASE, WindowActions::ID_LAST, AudacityApp::OnWindow)
+#endif
+
    // Handle AppCommandEvents (usually from a script)
    EVT_APP_COMMAND(wxID_ANY, AudacityApp::OnReceiveCommand)
 
@@ -977,6 +986,35 @@ void AudacityApp::OnMRUFile(wxCommandEvent& event) {
    if (!ProjectFileManager::IsAlreadyOpen(fullPathStr) && !MRUOpen(fullPathStr))
       history.RemoveFileFromHistory(n);
 }
+
+#if defined(__WXMAC__)
+// Handles switching projects when an item in the Window menu is selected
+void AudacityApp::OnWindow(wxCommandEvent& event)
+{
+   // Get the project's number
+   int projectNumber = event.GetId() - WindowActions::ID_BASE;
+
+   // Search for it
+   for (auto project : AllProjects{})
+   {
+      if (project->GetProjectNumber() == projectNumber)
+      {
+         // Make it the active project
+         SetActiveProject(project.get());
+
+         // And ensure it's visible
+         wxFrame *frame = project->GetFrame();
+         if (frame->IsIconized())
+         {
+            frame->Restore();
+         }
+         frame->Raise();
+
+         break;
+      }
+   }
+}
+#endif
 
 void AudacityApp::OnTimer(wxTimerEvent& WXUNUSED(event))
 {
@@ -1144,7 +1182,7 @@ bool AudacityApp::OnExceptionInMainLoop()
 AudacityApp::AudacityApp()
 {
 // Do not capture crashes in debug builds
-#if !defined(__WXDEBUG__)
+#if !defined(_DEBUG)
 #if defined(EXPERIMENTAL_CRASH_REPORT)
 #if defined(wxUSE_ON_FATAL_EXCEPTION) && wxUSE_ON_FATAL_EXCEPTION
    wxHandleFatalExceptions();
@@ -1384,7 +1422,7 @@ bool AudacityApp::OnInit()
    std::shared_ptr< wxCmdLineParser > parser{ ParseCommandLine().release() };
    if (!parser)
    {
-      // Either user requested help or a parsing error occured
+      // Either user requested help or a parsing error occurred
       exit(1);
    }
 
@@ -1886,7 +1924,7 @@ bool AudacityApp::CreateSingleInstanceChecker(const wxString &dir)
 
    mIPCServ.reset();
 
-   // Try twice to either become the server or make a connnection to one.  If
+   // Try twice to either become the server or make a connection to one.  If
    // both attempts fail, then there's something wrong that we can't deal with,
    // like insufficient access to create the socket, no memory, etc.
    for (int attempts = 0; attempts < 2; ++attempts)

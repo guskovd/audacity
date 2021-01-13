@@ -39,7 +39,7 @@
 // Its value may be more than 0 for pre-release "Beta" builds that differ only
 // in the welcome screen, and hiding of some development menu commands, but
 // still link to the alpha manual online.
-#define AUDACITY_BUILD_LEVEL 0
+#define AUDACITY_BUILD_LEVEL 2
 
 // used #ifdef not #if for IS_ALPHA, IS_BETA, IS_RELEASE, USE_ALPHA_MANUAL
 #undef IS_ALPHA
@@ -62,7 +62,7 @@
 // Increment as appropriate every time we release a NEW version.
 #define AUDACITY_VERSION   2
 #define AUDACITY_RELEASE   4
-#define AUDACITY_REVISION  0
+#define AUDACITY_REVISION  1
 #define AUDACITY_MODLEVEL  0
 
 #if defined(IS_BETA)
@@ -209,7 +209,7 @@ class wxWindow;
 
 // These macros are used widely, so declared here.
 #define QUANTIZED_TIME(time, rate) (floor(((double)(time) * (rate)) + 0.5) / (rate))
-// dB - linear amplitude convesions
+// dB - linear amplitude conversions
 #define DB_TO_LINEAR(x) (pow(10.0, (x) / 20.0))
 #define LINEAR_TO_DB(x) (20.0 * log10(x))
 
@@ -236,5 +236,11 @@ class wxWindow;
    #define RTL_WORKAROUND( pWnd ) 
 #endif
 
+// Define/undefine _DEBUG based on the (CMake provided) NDEBUG symbol
+#if defined(NDEBUG)
+   #undef _DEBUG
+#else
+   #define _DEBUG 1
+#endif
 
 #endif // __AUDACITY_H__
