@@ -52,6 +52,9 @@ It handles initialization and termination by subclassing wxApp.
 
 #ifdef __WXGTK__
 #include <unistd.h>
+#ifdef HAVE_GTK
+#include <gtk/gtk.h>
+#endif
 #endif
 
 // chmod, lstat, geteuid
@@ -109,10 +112,6 @@ It handles initialization and termination by subclassing wxApp.
 #include "tracks/ui/Scrubbing.h"
 #include "widgets/FileHistory.h"
 
-#if defined(__WXMAC__)
-#include "menus/WindowMenus.h"
-#endif
-
 #ifdef EXPERIMENTAL_EASY_CHANGE_KEY_BINDINGS
 #include "prefs/KeyConfigPrefs.h"
 #endif
@@ -143,110 +142,6 @@ It handles initialization and termination by subclassing wxApp.
     #endif
 #endif
 #endif
-
-// Windows specific linker control...only needed once so
-// this is a good place (unless we want to add another file).
-#if defined(__WXMSW__)
-//#if wxCHECK_VERSION(3, 0, 2) && !wxCHECK_VERSION(3, 1, 0)
-#include <wx/init.h>
-//#endif
-// These lines ensure that Audacity gets WindowsXP themes.
-// Without them we get the old-style Windows98/2000 look under XP.
-#  if !defined(__WXWINCE__)
-#     pragma comment(linker,"\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
-#  endif
-
-// These lines allows conditional inclusion of the various libraries
-// that Audacity can use.
-
-#  if defined(USE_LIBFLAC)
-#     pragma comment(lib, "libflac++")
-#     pragma comment(lib, "libflac")
-#  endif
-
-#  if defined(USE_LIBID3TAG)
-#     pragma comment(lib, "libid3tag")
-#  endif
-
-#  if defined(USE_LIBMAD)
-#     pragma comment(lib, "libmad")
-#  endif
-
-#  if defined(USE_LIBTWOLAME)
-#     pragma comment(lib, "twolame")
-#  endif
-
-#  if defined(USE_LIBVORBIS)
-#     pragma comment(lib, "libogg")
-#     pragma comment(lib, "libvorbis")
-#  endif
-
-#  if defined(USE_LV2)
-#     pragma comment(lib, "lv2")
-#  endif
-
-#  if defined(USE_MIDI)
-#     pragma comment(lib, "portsmf")
-#     endif
-
-#  if defined(EXPERIMENTAL_MIDI_OUT)
-#     pragma comment(lib, "portmidi")
-#  endif
-
-#  if defined(EXPERIMENTAL_SCOREALIGN)
-#     pragma comment(lib, "libscorealign")
-#  endif
-
-#  if defined(USE_NYQUIST)
-#     pragma comment(lib, "libnyquist")
-#  endif
-
-#  if defined(USE_PORTMIXER)
-#     pragma comment(lib, "portmixer")
-#  endif
-
-#  if defined(USE_SBSMS)
-#     pragma comment(lib, "sbsms")
-#  endif
-
-#  if defined(USE_SOUNDTOUCH)
-#     pragma comment(lib, "soundtouch")
-#  endif
-
-#  if defined(USE_VAMP)
-#     pragma comment(lib, "libvamp")
-#  endif
-
-#  if defined(_DEBUG)
-#     define D "d"
-#  else
-#     define D ""
-#  endif
-#  if wxCHECK_VERSION(3, 1, 0)
-#     define V "31"
-#  elif wxCHECK_VERSION(3, 0, 0)
-#     define V "30"
-#  else
-#     define V "28"
-#  endif
-
-#  if defined(EXPERIMENTAL_CRASH_REPORT)
-#     pragma comment(lib, "wxmsw" V "u" D "_qa")
-#  endif
-#  pragma comment(lib, "wxbase" V "u" D)
-#  pragma comment(lib, "wxbase" V "u" D "_net")
-#  pragma comment(lib, "wxmsw"  V "u" D "_adv")
-#  pragma comment(lib, "wxmsw"  V "u" D "_core")
-#  pragma comment(lib, "wxmsw"  V "u" D "_html")
-#  pragma comment(lib, "wxpng"        D)
-#  pragma comment(lib, "wxzlib"       D)
-#  pragma comment(lib, "wxjpeg"       D)
-#  pragma comment(lib, "wxtiff"       D)
-
-#  undef V
-#  undef D
-
-#endif //(__WXMSW__)
 
 // DA: Logo for Splash Screen
 #ifdef EXPERIMENTAL_DA
@@ -464,13 +359,14 @@ void PopulatePreferences()
        (vMajor == 2 && vMinor < 4))
    {
       gPrefs->Write(wxT("/GUI/Toolbars/Selection/W"),"");
+      gPrefs->Write(wxT("/GUI/Toolbars/SpectralSelection/W"),"");
       gPrefs->Write(wxT("/GUI/Toolbars/Time/X"),-1);
       gPrefs->Write(wxT("/GUI/Toolbars/Time/Y"),-1);
       gPrefs->Write(wxT("/GUI/Toolbars/Time/H"),55);
       gPrefs->Write(wxT("/GUI/Toolbars/Time/W"),251);
       gPrefs->Write(wxT("/GUI/Toolbars/Time/DockV2"),2);
       gPrefs->Write(wxT("/GUI/Toolbars/Time/Dock"),2);
-      gPrefs->Write(wxT("/GUI/Toolbars/Time/Path"),"0,0");
+      gPrefs->Write(wxT("/GUI/Toolbars/Time/Path"),"0,1");
       gPrefs->Write(wxT("/GUI/Toolbars/Time/Show"),1);
    }
 
@@ -889,11 +785,6 @@ BEGIN_EVENT_TABLE(AudacityApp, wxApp)
    EVT_MENU_RANGE(FileHistory::ID_RECENT_FIRST, FileHistory::ID_RECENT_LAST,
       AudacityApp::OnMRUFile)
 
-#if defined(__WXMAC__)
-   // Window menu event handlers.
-   EVT_MENU_RANGE(WindowActions::ID_BASE, WindowActions::ID_LAST, AudacityApp::OnWindow)
-#endif
-
    // Handle AppCommandEvents (usually from a script)
    EVT_APP_COMMAND(wxID_ANY, AudacityApp::OnReceiveCommand)
 
@@ -973,48 +864,19 @@ void AudacityApp::OnMRUClear(wxCommandEvent& WXUNUSED(event))
 void AudacityApp::OnMRUFile(wxCommandEvent& event) {
    int n = event.GetId() - FileHistory::ID_RECENT_FIRST;
    auto &history = FileHistory::Global();
-   const auto &fullPathStr = history.GetHistoryFile(n);
+   const auto &fullPathStr = history[ n ];
 
    // Try to open only if not already open.
    // Test IsAlreadyOpen() here even though AudacityProject::MRUOpen() also now checks,
-   // because we don't want to RemoveFileFromHistory() just because it already exists,
+   // because we don't want to Remove() just because it already exists,
    // and AudacityApp::OnMacOpenFile() calls MRUOpen() directly.
    // that method does not return the bad result.
    // PRL: Don't call SafeMRUOpen
    // -- if open fails for some exceptional reason of resource exhaustion that
    // the user can correct, leave the file in history.
    if (!ProjectFileManager::IsAlreadyOpen(fullPathStr) && !MRUOpen(fullPathStr))
-      history.RemoveFileFromHistory(n);
+      history.Remove(n);
 }
-
-#if defined(__WXMAC__)
-// Handles switching projects when an item in the Window menu is selected
-void AudacityApp::OnWindow(wxCommandEvent& event)
-{
-   // Get the project's number
-   int projectNumber = event.GetId() - WindowActions::ID_BASE;
-
-   // Search for it
-   for (auto project : AllProjects{})
-   {
-      if (project->GetProjectNumber() == projectNumber)
-      {
-         // Make it the active project
-         SetActiveProject(project.get());
-
-         // And ensure it's visible
-         wxFrame *frame = project->GetFrame();
-         if (frame->IsIconized())
-         {
-            frame->Restore();
-         }
-         frame->Raise();
-
-         break;
-      }
-   }
-}
-#endif
 
 void AudacityApp::OnTimer(wxTimerEvent& WXUNUSED(event))
 {
@@ -1220,6 +1082,42 @@ bool AudacityApp::OnInit()
    wxSystemOptions::SetOption(wxMAC_WINDOW_PLAIN_TRANSITION, 1);
 #endif
 
+   // Some GTK themes produce larger combo boxes that make them taller
+   // than our single toolbar height restriction.  This will remove some
+   // of the extra space themes add.
+#if defined(__WXGTK3__) && defined(HAVE_GTK)
+   GtkWidget *combo = gtk_combo_box_new();
+   GtkCssProvider *provider = gtk_css_provider_new();
+   gtk_css_provider_load_from_data(GTK_CSS_PROVIDER(provider),
+                                   ".linked entry,\n"
+                                   ".linked button,\n"
+                                   ".linked combobox box.linked button,\n"
+                                   ".horizontal.linked entry,\n"
+                                   ".horizontal.linked button,\n"
+                                   ".horizontal.linked combobox box.linked button,\n"
+                                   "combobox {\n"
+                                   "   padding-top: 0px;\n"
+                                   "   padding-bottom: 0px;\n"
+                                   "   padding-left: 4px;\n"
+                                   "   padding-right: 4px;\n"
+                                   "   margin: 0px;\n"
+                                   "   font-size: 95%;\n"
+                                   "}", -1, NULL);
+   gtk_style_context_add_provider_for_screen(gtk_widget_get_screen(combo),
+                                             GTK_STYLE_PROVIDER (provider),
+                                             GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+   g_object_unref(provider);
+   g_object_unref(combo);
+#elif defined(__WXGTK__) && defined(HAVE_GTK)
+   gtk_rc_parse_string("style \"audacity\" {\n"
+                       " GtkButton::inner_border = { 0, 0, 0, 0 }\n"
+                       " GtkEntry::inner_border = { 0, 0, 0, 0 }\n"
+                       " xthickness = 4\n"
+                       " ythickness = 0\n"
+                       "}\n"
+                       "widget_class \"*GtkCombo*\" style \"audacity\"");
+#endif
+
    // Don't use AUDACITY_NAME here.
    // We want Audacity with a capital 'A'
 
@@ -1249,7 +1147,8 @@ bool AudacityApp::OnInit()
    /* Search path (for plug-ins, translations etc) is (in this order):
       * The AUDACITY_PATH environment variable
       * The current directory
-      * The user's .audacity-files directory in their home directory
+      * The user's "~/.audacity-data" or "Portable Settings" directory
+      * The user's "~/.audacity-files" directory
       * The "share" and "share/doc" directories in their install path */
    wxString home = wxGetHomeDir();
 
@@ -1275,6 +1174,11 @@ bool AudacityApp::OnInit()
       FileNames::AddMultiPathsToPathList(pathVar, audacityPathList);
    FileNames::AddUniquePathToPathList(::wxGetCwd(), audacityPathList);
 
+   wxString progPath = wxPathOnly(argv[0]);
+   FileNames::AddUniquePathToPathList(progPath, audacityPathList);
+
+   FileNames::AddUniquePathToPathList(FileNames::DataDir(), audacityPathList);
+
 #ifdef AUDACITY_NAME
    FileNames::AddUniquePathToPathList(wxString::Format(wxT("%s/.%s-files"),
       home, wxT(AUDACITY_NAME)),
@@ -1288,7 +1192,7 @@ bool AudacityApp::OnInit()
 #else //AUDACITY_NAME
    FileNames::AddUniquePathToPathList(wxString::Format(wxT("%s/.audacity-files"),
       home),
-      audacityPathList);
+      audacityPathList)
    FileNames::AddUniquePathToPathList(wxString::Format(wxT("%s/share/audacity"),
       wxT(INSTALL_PREFIX)),
       audacityPathList);
@@ -1536,7 +1440,6 @@ bool AudacityApp::OnInit()
 
       auto &recentFiles = FileHistory::Global();
       recentFiles.UseMenu(recentMenu);
-      recentFiles.AddFilesToMenu(recentMenu);
 
       SetExitOnFrameDelete(false);
 
@@ -1634,7 +1537,7 @@ bool AudacityApp::OnInit()
    CommandManager::SetMenuHook( [](const CommandID &id){
       if (::wxGetMouseState().ShiftDown()) {
          // Only want one page of the preferences
-         PrefsDialog::Factories factories;
+         PrefsPanel::Factories factories;
          factories.push_back(KeyConfigPrefsFactory( id ));
          const auto pProject = GetActiveProject();
          auto pWindow = FindProjectFrame( pProject );
@@ -1773,7 +1676,7 @@ bool AudacityApp::InitTempDir()
       }
 
       // Only want one page of the preferences
-      PrefsDialog::Factories factories;
+      PrefsPanel::Factories factories;
       factories.push_back(DirectoriesPrefsFactory());
       GlobalPrefsDialog dialog(nullptr, nullptr, factories);
       dialog.ShowModal();
@@ -2382,7 +2285,7 @@ void AudacityApp::AssociateFileTypes()
                associateFileTypes.SetName(root_key + wxT("Audacity.Project\\shell\\open\\command"));
                wxString tmpRegAudPath;
                if(associateFileTypes.Exists()) {
-                  tmpRegAudPath = wxString(associateFileTypes).Lower();
+                  tmpRegAudPath = associateFileTypes.QueryDefaultValue().Lower();
                }
                if (!associateFileTypes.Exists() ||
                      (tmpRegAudPath.Find(wxT("audacity.exe")) >= 0)) {

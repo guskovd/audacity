@@ -106,7 +106,7 @@ void ExtImportPrefs::PopulateOrExchange(ShuttleGui & S)
    S.SetBorder(2);
    S.StartScroller();
 
-   S.TieCheckBox(XO("A&ttempt to use filter in OpenFile dialog first"),
+   S.TieCheckBox(XXO("A&ttempt to use filter in OpenFile dialog first"),
          {wxT("/ExtendedImport/OverrideExtendedImportByOpenFileDialogChoice"),
           true});
    S.StartStatic(XO("Rules to choose import filters"), 1);
@@ -184,19 +184,19 @@ void ExtImportPrefs::PopulateOrExchange(ShuttleGui & S)
       S.EndHorizontalLay();
       S.StartHorizontalLay (wxSHRINK, 0);
       {
-          MoveRuleUp = S.Id (EIPMoveRuleUp).AddButton(XO("Move rule &up"));
+          MoveRuleUp = S.Id (EIPMoveRuleUp).AddButton(XXO("Move rule &up"));
           MoveRuleDown = S.Id (EIPMoveRuleDown).AddButton(
-             XO("Move rule &down"));
+             XXO("Move rule &down"));
           MoveFilterUp = S.Id (EIPMoveFilterUp).AddButton(
-             XO("Move f&ilter up"));
+             XXO("Move f&ilter up"));
           MoveFilterDown = S.Id (EIPMoveFilterDown).AddButton(
-             XO("Move &filter down"));
+             XXO("Move &filter down"));
       }
       S.EndHorizontalLay();
       S.StartHorizontalLay (wxSHRINK, 0);
       {
-          AddRule = S.Id (EIPAddRule).AddButton(XO("&Add new rule"));
-          DelRule = S.Id (EIPDelRule).AddButton(XO("De&lete selected rule"));
+          AddRule = S.Id (EIPAddRule).AddButton(XXO("&Add new rule"));
+          DelRule = S.Id (EIPDelRule).AddButton(XXO("De&lete selected rule"));
       }
       S.EndHorizontalLay();
    }
@@ -326,7 +326,8 @@ bool ExtImportPrefs::DoOnPluginKeyDown (int code)
    if (mFakeKeyEvent)
    {
       PluginList->SetItemState (itemIndex, 0, wxLIST_STATE_SELECTED);
-      PluginList->SetItemState (itemIndex2, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
+      PluginList->SetItemState (itemIndex2, wxLIST_STATE_SELECTED | wxLIST_STATE_FOCUSED,
+         wxLIST_STATE_SELECTED | wxLIST_STATE_FOCUSED);
    }
    int fcount = item->filter_objects.size();
    if (item->divider >= fcount)
@@ -460,7 +461,7 @@ void ExtImportPrefs::DoOnRuleTableSelect (int toprow)
 {
    auto &items = Importer::Get().GetImportItems();
 
-   if (toprow < 0 || toprow > (int)items.size())
+   if (toprow < 0 || toprow >= (int)items.size())
    {
       return;
    }
@@ -498,8 +499,8 @@ void ExtImportPrefs::DoOnRuleTableSelect (int toprow)
    wxListItem info;
    info.SetId (0);
    info.SetColumn (0);
-   info.SetStateMask (wxLIST_STATE_SELECTED);
-   info.SetState (wxLIST_STATE_SELECTED);
+   info.SetStateMask (wxLIST_STATE_SELECTED | wxLIST_STATE_FOCUSED);
+   info.SetState (wxLIST_STATE_SELECTED | wxLIST_STATE_FOCUSED);
    info.SetMask (wxLIST_MASK_STATE);
    PluginList->SetItem (info);
    PluginList->SetColumnWidth (0, wxLIST_AUTOSIZE);

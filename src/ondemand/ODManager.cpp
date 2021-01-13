@@ -20,7 +20,6 @@ ODTask requests and internals.
 #include "ODTask.h"
 #include "ODWaveTrackTaskQueue.h"
 #include "../Project.h"
-#include <NonGuiThread.h>
 #include <wx/utils.h>
 #include <wx/wx.h>
 #include <wx/thread.h>
@@ -142,9 +141,6 @@ std::unique_ptr<ODManager> ODManager::pMan{};
 typedef  ODManager* (*pfodman)();
 pfodman ODManager::Instance = &(ODManager::InstanceFirstTime);
 
-//libsndfile is not threadsafe - this deals with it
-static ODLock sLibSndFileMutex;
-
 wxDEFINE_EVENT(EVT_ODTASK_UPDATE, wxCommandEvent);
 
 //using this with wxStringArray::Sort will give you a list that
@@ -190,7 +186,7 @@ ODManager::~ODManager()
    }
    mTerminatedMutex.Unlock();
 
-   //get rid of all the queues.  The queues get rid of the tasks, so we don't worry abut them.
+   //get rid of all the queues.  The queues get rid of the tasks, so we don't worry about them.
    //nothing else should be running on OD related threads at this point, so we don't lock.
    mQueues.clear();
 }

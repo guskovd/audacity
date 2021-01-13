@@ -69,7 +69,6 @@
 #include <wx/checkbox.h>
 #include <wx/dynlib.h>
 #include <wx/ffile.h>
-#include <wx/filedlg.h>
 #include <wx/intl.h>
 #include <wx/log.h>
 #include <wx/mimetype.h>
@@ -295,10 +294,10 @@ ExportMP3Options::~ExportMP3Options()
 EnumSetting< MP3RateMode > MP3RateModeSetting{
    wxT("/FileFormats/MP3RateModeChoice"),
    {
-      { wxT("SET"), XO("Preset") },
-      { wxT("VBR"), XO("Variable") },
-      { wxT("ABR"), XO("Average") },
-      { wxT("CBR"), XO("Constant") },
+      { wxT("SET"), XXO("Preset") },
+      { wxT("VBR"), XXO("Variable") },
+      { wxT("ABR"), XXO("Average") },
+      { wxT("CBR"), XXO("Constant") },
    },
    0, // MODE_SET
 
@@ -312,8 +311,8 @@ EnumSetting< MP3RateMode > MP3RateModeSetting{
 static EnumSetting< MP3ChannelMode > MP3ChannelModeSetting{
    wxT("/FileFormats/MP3ChannelModeChoice"),
    {
-      EnumValueSymbol{ wxT("JOINT"), XO("Joint Stereo") },
-      EnumValueSymbol{ wxT("STEREO"), XO("Stereo") },
+      EnumValueSymbol{ wxT("JOINT"), XXO("Joint Stereo") },
+      EnumValueSymbol{ wxT("STEREO"), XXO("Stereo") },
    },
    0, // CHANNEL_JOINT
 
@@ -345,7 +344,7 @@ void ExportMP3Options::PopulateOrExchange(ShuttleGui & S)
             S.SetStretchyCol(1);
             S.StartTwoColumn();
             {
-               S.AddPrompt(XO("Bit Rate Mode:"));
+               S.AddPrompt(XXO("Bit Rate Mode:"));
                S.StartHorizontalLay();
                {
                   S.StartRadioButtonGroup(MP3RateModeSetting);
@@ -395,7 +394,7 @@ void ExportMP3Options::PopulateOrExchange(ShuttleGui & S)
                }
 
                mRate = S.Id(ID_QUALITY).TieNumberAsChoice(
-                  XO("Quality"),
+                  XXO("Quality"),
                   { wxT("/FileFormats/MP3Bitrate"), defrate },
                   *choices,
                   codes
@@ -403,11 +402,11 @@ void ExportMP3Options::PopulateOrExchange(ShuttleGui & S)
 
                mMode = S.Disable(!enable)
                   .TieNumberAsChoice(
-                     XO("Variable Speed:"),
+                     XXO("Variable Speed:"),
                      { wxT("/FileFormats/MP3VarMode"), ROUTINE_FAST },
                      varModeNames );
    
-               S.AddPrompt(XO("Channel Mode:"));
+               S.AddPrompt(XXO("Channel Mode:"));
                S.StartMultiColumn(3, wxEXPAND);
                {
                   S.StartRadioButtonGroup(MP3ChannelModeSetting);
@@ -419,7 +418,7 @@ void ExportMP3Options::PopulateOrExchange(ShuttleGui & S)
                   }
                   S.EndRadioButtonGroup();
 
-                  mMono = S.Id(ID_MONO).AddCheckBox(XO("Force export to mono"), mono);
+                  mMono = S.Id(ID_MONO).AddCheckBox(XXO("Force export to mono"), mono);
                }
                S.EndTwoColumn();
             }
@@ -614,12 +613,12 @@ public:
             else {
                mPathText = S.AddTextBox( {}, mLibPath.GetFullPath(), 0);
             }
-            S.Id(ID_BROWSE).AddButton(XO("Browse..."), wxALIGN_RIGHT);
+            S.Id(ID_BROWSE).AddButton(XXO("Browse..."), wxALIGN_RIGHT);
             S.AddVariableText(
                /* i18n-hint: There is a  button to the right of the arrow.*/
                XO("To get a free copy of LAME, click here -->"), true);
             /* i18n-hint: (verb)*/
-            S.Id(ID_DLOAD).AddButton(XO("Download"), wxALIGN_RIGHT);
+            S.Id(ID_DLOAD).AddButton(XXO("Download"), wxALIGN_RIGHT);
          }
          S.EndMultiColumn();
 
@@ -2054,7 +2053,7 @@ int ExportMP3::AskResample(int bitrate, int rate, int lowrate, int highrate)
 
          S.StartHorizontalLay(wxALIGN_CENTER, false);
          {
-            choice = S.AddChoice(XO("Sample Rates"),
+            choice = S.AddChoice(XXO("Sample Rates"),
                [&]{
                   TranslatableStrings choices;
                   for (size_t ii = 0, nn = sampRates.size(); ii < nn; ++ii) {
@@ -2212,10 +2211,10 @@ static Exporter::RegisteredExportPlugin sRegisteredPlugin{ "MP3",
 // Return library version
 //----------------------------------------------------------------------------
 
-wxString GetMP3Version(wxWindow *parent, bool prompt)
+TranslatableString GetMP3Version(wxWindow *parent, bool prompt)
 {
    MP3Exporter exporter;
-   wxString versionString = _("MP3 export library not found");
+   auto versionString = XO("MP3 export library not found");
 
 #ifndef DISABLE_DYNAMIC_LOADING_LAME
    if (prompt) {
@@ -2224,10 +2223,9 @@ wxString GetMP3Version(wxWindow *parent, bool prompt)
 
    if (exporter.LoadLibrary(parent, prompt ? MP3Exporter::Yes : MP3Exporter::No)) {
 #endif // DISABLE_DYNAMIC_LOADING_LAME
-      versionString = exporter.GetLibraryVersion();
+      versionString = Verbatim( exporter.GetLibraryVersion() );
 #ifdef MP3_EXPORT_BUILT_IN
-      versionString += " ";
-      versionString += _("(Built-in)");
+      versionString.Join( XO("(Built-in)"), " " );
 #endif
 
 #ifndef DISABLE_DYNAMIC_LOADING_LAME

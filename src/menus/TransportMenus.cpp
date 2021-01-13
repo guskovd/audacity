@@ -71,18 +71,6 @@ bool MakeReadyToPlay(AudacityProject &project)
    return true;
 }
 
-// Post Timer Recording Actions
-// Ensure this matches the enum in TimerRecordDialog.cpp
-enum {
-   POST_TIMER_RECORD_STOPPED = -3,
-   POST_TIMER_RECORD_CANCEL_WAIT,
-   POST_TIMER_RECORD_CANCEL,
-   POST_TIMER_RECORD_NOTHING,
-   POST_TIMER_RECORD_CLOSE,
-   POST_TIMER_RECORD_RESTART,
-   POST_TIMER_RECORD_SHUTDOWN
-};
-
 // Returns true if this project was stopped, otherwise false.
 // (it may though have stopped another project playing)
 bool DoStopPlaying(const CommandContext &context)
@@ -371,20 +359,19 @@ void OnTimerRecord(const CommandContext &context)
          } );
          ProjectManager::Get(project).SetSkipSavePrompt(true);
          break;
+
+#ifdef __WINDOWS__
       case POST_TIMER_RECORD_RESTART:
          // Restart System
          ProjectManager::Get(project).SetSkipSavePrompt(true);
-#ifdef __WINDOWS__
          system("shutdown /r /f /t 30");
-#endif
          break;
       case POST_TIMER_RECORD_SHUTDOWN:
          // Shutdown System
          ProjectManager::Get(project).SetSkipSavePrompt(true);
-#ifdef __WINDOWS__
          system("shutdown /s /f /t 30");
-#endif
          break;
+#endif
       }
    }
 }
@@ -971,9 +958,9 @@ BaseItemSharedPtr TransportMenu()
    ( FinderScope{ findCommandHandler },
    /* i18n-hint: 'Transport' is the name given to the set of controls that
       play, record, pause etc. */
-   Menu( wxT("Transport"), XO("Tra&nsport"),
+   Menu( wxT("Transport"), XXO("Tra&nsport"),
       Section( "Basic",
-         Menu( wxT("Play"), XO("Pl&aying"),
+         Menu( wxT("Play"), XXO("Pl&aying"),
             /* i18n-hint: (verb) Start or Stop audio playback*/
             Command( wxT("PlayStop"), XXO("Pl&ay/Stop"), FN(OnPlayStop),
                CanStopAudioStreamFlag(), wxT("Space") ),
@@ -985,7 +972,7 @@ BaseItemSharedPtr TransportMenu()
                CanStopAudioStreamFlag(), wxT("P") )
          ),
 
-         Menu( wxT("Record"), XO("&Recording"),
+         Menu( wxT("Record"), XXO("&Recording"),
             /* i18n-hint: (verb)*/
             Command( wxT("Record1stChoice"), XXO("&Record"), FN(OnRecord),
                CanStopFlags, wxT("R") ),
@@ -1001,7 +988,7 @@ BaseItemSharedPtr TransportMenu()
                // We supply the name for the 'other one' here.
                // It should be bound to Shift+R
                (gPrefs->ReadBool("/GUI/PreferNewTrackRecord", false)
-                ? XO("&Append Record") : XO("Record &New Track")),
+                ? XXO("&Append Record") : XXO("Record &New Track")),
                FN(OnRecord2ndChoice), CanStopFlags,
                wxT("Shift+R"),
                findCommandHandler
@@ -1027,7 +1014,7 @@ BaseItemSharedPtr TransportMenu()
 
       Section( "Other",
          Section( "",
-            Menu( wxT("PlayRegion"), XO("Pla&y Region"),
+            Menu( wxT("PlayRegion"), XXO("Pla&y Region"),
                Command( wxT("LockPlayRegion"), XXO("&Lock"), FN(OnLockPlayRegion),
                   PlayRegionNotLockedFlag() ),
                Command( wxT("UnlockPlayRegion"), XXO("&Unlock"),
@@ -1038,7 +1025,7 @@ BaseItemSharedPtr TransportMenu()
          Command( wxT("RescanDevices"), XXO("R&escan Audio Devices"),
             FN(OnRescanDevices), AudioIONotBusyFlag() | CanStopAudioStreamFlag() ),
 
-         Menu( wxT("Options"), XO("Transport &Options"),
+         Menu( wxT("Options"), XXO("Transport &Options"),
             Section( "",
                // Sound Activated recording options
                Command( wxT("SoundActivationLevel"),
@@ -1101,7 +1088,7 @@ BaseItemSharedPtr ExtraTransportMenu()
 {
    static BaseItemSharedPtr menu{
    ( FinderScope{ findCommandHandler },
-   Menu( wxT("Transport"), XO("T&ransport"),
+   Menu( wxT("Transport"), XXO("T&ransport"),
       // PlayStop is already in the menus.
       /* i18n-hint: (verb) Start playing audio*/
       Command( wxT("Play"), XXO("Pl&ay"), FN(OnPlayStop),
@@ -1150,7 +1137,7 @@ BaseItemSharedPtr ExtraPlayAtSpeedMenu()
 {
    static BaseItemSharedPtr menu{
    ( FinderScope{ findCommandHandler },
-   Menu( wxT("PlayAtSpeed"), XO("&Play-at-Speed"),
+   Menu( wxT("PlayAtSpeed"), XXO("&Play-at-Speed"),
       /* i18n-hint: 'Normal Play-at-Speed' doesn't loop or cut preview. */
       Command( wxT("PlayAtSpeed"), XXO("Normal Pl&ay-at-Speed"),
          FN(OnPlayAtSpeed), CaptureNotBusyFlag() ),

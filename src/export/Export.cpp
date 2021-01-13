@@ -35,7 +35,6 @@
 #include <wx/file.h>
 #include <wx/filectrl.h>
 #include <wx/filename.h>
-#include <wx/progdlg.h>
 #include <wx/simplebook.h>
 #include <wx/sizer.h>
 #include <wx/slider.h>
@@ -49,7 +48,7 @@
 
 #include "sndfile.h"
 
-#include "FileDialog.h"
+#include "../widgets/FileDialog/FileDialog.h"
 
 #include "../DirManager.h"
 #include "../FileFormats.h"

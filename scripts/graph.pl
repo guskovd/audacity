@@ -1,28 +1,56 @@
 #!/usr/bin/perl
 
 use strict 'vars';
+use File::Spec;
 
 my $traceLevel = 3;
 
 # whether to box the clusters by sub-folder, but always color nodes regardless
-my $clustering = 0;
+my @clusterlist = qw(
+   /xml
+   /export
+   /menus
+   /effects/VST
+   /effects/ladspa
+   /effects/lv2
+   /effects/nyquist
+   /effects/vamp
+);
+my %clusters;
+@clusters{@clusterlist} = ();
+sub clustering
+{
+   return exists( $clusters{ $_[0] } );
+}
 
 # whether to prune redundant arcs implied in transitive closure
 my $pruning = 1;
 
+# whether to insert hyperlinks
+my $links = 1;
+
 # Step 1: collect short names and paths to .cpp files
 # We assume that final path components uniquely identify the files!
 my $dir = "../src";
+
 my %names; # string to string
-foreach my $file (`find $dir -name '*.cpp'`) {
-   my $short = $file;
-   chop $short;
-   $short =~ s|.cpp$||;
-   my $shorter = ($short =~ s|^.*/||r);
-   $names{$shorter} = $short;
+{
+   foreach my $file (`find $dir -name '*.cpp' -o -name '*.h' -o -name '*.mm'`) {
+      my $short = $file;
+      chop $short;
+      $short =~ s|\.cpp$||;
+      $short =~ s|\.h$||;
+      $short =~ s|\.mm$||;
+      my $shorter = ($short =~ s|^.*/||r);
+      $names{$shorter} = $short;
+   }
 }
 
-print STDERR "Found ", scalar( keys %names ), " .cpp file(s)\n" if $traceLevel >= 1;
+#my $linkroot = "https://github.com/audacity/audacity/tree/master/src";
+my $linkroot = "file://" . File::Spec->rel2abs( $dir );
+
+
+print STDERR "Found ", scalar( keys %names ), " filename(s)\n" if $traceLevel >= 1;
 
 # Step 2: collect inclusions in each .cpp/.h pair, and folder information,
 # and build a graph
@@ -70,7 +98,7 @@ while( my ($shorter, $short) = each(%names) ) {
       chop;
       my @components = split '/';
       my $include = $components[-1];
-      # omit self-arcs and arcs to .h files without corresponding .cpp
+      # omit self-arcs and arcs to .h files external to the project
       if (($shorter ne $include) && (exists $names{$include})) {
          $graph{$shorter}{$include} = (), ++$arcs;
       }
@@ -272,9 +300,14 @@ open my $fh, ">", $fname or die "Can't open file";
 *STDOUT = $fh;
 
 # header
-my $graphAttr = $clustering ? "labeljust=l labelloc=b" : "";
+my $graphAttr =
+   # $clustering ?
+   "labeljust=l labelloc=b"
+   # : ""
+   ;
 print "strict digraph{ graph [";
 print $graphAttr;
+print " newrank=true";
 #print " mclimit=0.01";
 #print " nslimit=1";
 #print " rank=max";
@@ -290,10 +323,11 @@ print "// Nodes\n";
 my $hue = 0;
 my $saturation = 1.0;
 my $huestep = 1.0 / $nFolders;
-my $cluster = $clustering ? "cluster" : "";
-my $clusterAttr = $clustering ? "style=dashed " : "";
 sub subgraph{
    my ($foldername, $hashref) = @_;
+   my $clustered = clustering( $foldername );
+   my $cluster = $clustered ? "cluster" : "";
+   my $clusterAttr = $clustered ? "style=bold color=\"blue\"" : "";
    print STDERR "subgraph \"$foldername\"\n" if $traceLevel >= 3;
    my $color = "${hue},${saturation},1.0";
    $hue += $huestep;
@@ -312,6 +346,7 @@ sub subgraph{
       my $label = SCCLabel( $scc );
       print "   \"${id}\" [label=\"$label\"";
       # insert other node attributes here as key=value pairs,
+      print " URL=\"${linkroot}${foldername}/${id}.cpp\"" if $links;
       # separated by spaces
       print"]\n";
    }
@@ -333,6 +368,7 @@ while( my ($head, $data) = each( %quotientGraph ) ) {
    foreach my $tail ( @{$$data[0]} ) {
       print "   \"$head\" -> \"$tail\" [";
       # insert arc attributes here as key=value pairs,
+      print "penwidth=2.0";
       # separated by spaces
       print"]\n";
    }
@@ -347,5 +383,5 @@ print "}\n";
 # Step 5: generate image
 print STDERR "Generating image...\n" if $traceLevel >= 1;
 my $verbosity = ($traceLevel >= 2) ? "-v" : "";
-`dot $verbosity -O -Tgif $fname`;
+`dot $verbosity -O -Tsvg $fname`;
 print STDERR "done\n" if $traceLevel >= 1;

@@ -28,6 +28,7 @@
 #include "ToolManager.h"
 
 #include "../Experimental.h"
+#include "../commands/CommandContext.h"
 
 // For compilers that support precompilation, includes "wx/wx.h".
 #include <wx/wxprec.h>
@@ -86,23 +87,7 @@ ToolFrame::ToolFrame
    , mParent{ parent }
 {
    int width = bar->GetSize().x;
-   int border;
-
-   // OSX doesn't need a border, but Windows and Linux do
-   border = 1;
-#if defined(__WXMAC__)
-   border = 0;
-
-   // WXMAC doesn't support wxFRAME_FLOAT_ON_PARENT, so we do
-   //
-   // LL:  I've commented this out because if you have, for instance, the meter
-   //      toolbar undocked and large and then you open a dialog like an effect,
-   //      the dialog may appear behind the dialog and you can't move either one.
-   //
-   //      However, I'm leaving it here because I don't remember why I'd included
-   //      it in the first place.
-   // SetWindowClass((WindowRef)d.MacGetWindowRef(), kFloatingWindowClass);
-#endif
+   int border = 1;
 
    // Save parameters
    mManager = manager;
@@ -192,14 +177,11 @@ void ToolFrame::OnPaint( wxPaintEvent & WXUNUSED(event) )
    wxSize sz = GetSize();
    wxRect r;
 
-   dc.SetPen( theTheme.Colour( clrTrackPanelText) );
-#if !defined(__WXMAC__)
-   wxBrush clearer( theTheme.Colour( clrMedium ));
-   dc.SetBackground( clearer );
+   dc.SetPen( theTheme.Colour( clrTrackPanelText ) );
+   dc.SetBackground( wxBrush( theTheme.Colour( clrMedium ) ) );
    dc.Clear();
    dc.SetBrush( *wxTRANSPARENT_BRUSH );
    dc.DrawRectangle( 0, 0, sz.GetWidth(), sz.GetHeight() );
-#endif
 
    if( mBar && mBar->IsResizable() )
    {
@@ -360,9 +342,7 @@ auto ToolManager::SetGetTopPanelHook( const GetTopPanelHook &hook )
 
 static const AudacityProject::AttachedObjects::RegisteredFactory key{
   []( AudacityProject &parent ){
-     auto &window = GetProjectFrame( parent );
-     return std::make_shared< ToolManager >(
-        &parent, getTopPanelHook()( window ) ); }
+     return std::make_shared< ToolManager >( &parent ); }
 };
 
 ToolManager &ToolManager::Get( AudacityProject &project )
@@ -378,13 +358,9 @@ const ToolManager &ToolManager::Get( const AudacityProject &project )
 //
 // Constructor
 //
-ToolManager::ToolManager( AudacityProject *parent, wxWindow *topDockParent )
+ToolManager::ToolManager( AudacityProject *parent )
 : wxEvtHandler()
 {
-   if ( !topDockParent )
-      THROW_INCONSISTENCY_EXCEPTION;
-
-   auto &window = GetProjectFrame( *parent );
    wxPoint pt[ 3 ];
 
 #if defined(__WXMAC__)
@@ -448,6 +424,12 @@ ToolManager::ToolManager( AudacityProject *parent, wxWindow *topDockParent )
 
    // It's a little shy
    mIndicator->Hide();
+}
+
+void ToolManager::CreateWindows()
+{
+   auto parent = mParent;
+   auto &window = GetProjectFrame( *parent );
 
    // Hook the parents mouse events...using the parent helps greatly
    // under GTK
@@ -460,6 +442,8 @@ ToolManager::ToolManager( AudacityProject *parent, wxWindow *topDockParent )
    window.Bind( wxEVT_MOUSE_CAPTURE_LOST,
                      &ToolManager::OnCaptureLost,
                      this );
+
+   wxWindow *topDockParent = getTopPanelHook()( window );
 
    // Create the top and bottom docks
    mTopDock = safenew ToolDock( this, topDockParent, TopDockID );
@@ -565,6 +549,17 @@ static struct DefaultConfigEntry {
    // Hidden by default in bottom dock
    { SpectralSelectionBarID, NoBarID,                NoBarID                },
 };
+
+// Static member function.
+void ToolManager::OnResetToolBars(const CommandContext &context)
+{
+   auto &project = context.project;
+   auto &toolManager = ToolManager::Get( project );
+
+   toolManager.Reset();
+   MenuManager::Get(project).ModifyToolbarMenus(project);
+}
+
 
 void ToolManager::Reset()
 {

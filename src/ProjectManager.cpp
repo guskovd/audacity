@@ -45,7 +45,7 @@ Paul Licameli split from AudacityProject.cpp
 #include "toolbars/MixerToolBar.h"
 #include "toolbars/SelectionBar.h"
 #include "toolbars/SpectralSelectionBar.h"
-#include "toolbars/TimerToolBar.h"
+#include "toolbars/TimeToolBar.h"
 #include "toolbars/ToolManager.h"
 #include "widgets/AudacityMessageBox.h"
 #include "widgets/FileHistory.h"
@@ -393,6 +393,7 @@ void InitProjectWindow( ProjectWindow &window )
    //
    // Create the ToolDock
    //
+   ToolManager::Get( project ).CreateWindows();
    ToolManager::Get( project ).LayoutToolBars();
 
    //
@@ -571,7 +572,7 @@ AudacityProject *ProjectManager::New()
 #ifdef EXPERIMENTAL_SPECTRAL_EDITING
    SpectralSelectionBar::Get( project ).SetListener( &projectSelectionManager );
 #endif
-   TimerToolBar::Get( project ).SetListener( &projectSelectionManager );
+   TimeToolBar::Get( project ).SetListener( &projectSelectionManager );
    
 #if wxUSE_DRAG_AND_DROP
    // We can import now, so become a drag target
@@ -1044,9 +1045,9 @@ TranslatableString ProjectManager::GetHoursMinsString(int iMinutes)
    int iHours = iMinutes / 60;
    int iMins = iMinutes % 60;
 
-   auto sHours = wxPLURAL( "%d hour", "%d hours", 0 )( iHours );
+   auto sHours = XP( "%d hour", "%d hours", 0 )( iHours );
 
-   auto sMins = wxPLURAL( "%d minute", "%d minutes", 0 )( iMins );
+   auto sMins = XP( "%d minute", "%d minutes", 0 )( iMins );
 
    /* i18n-hint: A time in hours and minutes. Only translate the "and". */
    return XO("%s and %s.").Format( sHours, sMins );

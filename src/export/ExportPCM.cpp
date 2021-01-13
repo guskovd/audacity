@@ -17,7 +17,6 @@
 #include <wx/filename.h>
 #include <wx/intl.h>
 #include <wx/timer.h>
-#include <wx/progdlg.h>
 #include <wx/string.h>
 #include <wx/textctrl.h>
 #include <wx/window.h>
@@ -210,12 +209,12 @@ void ExportPCMOptions::PopulateOrExchange(ShuttleGui & S)
             if (mSelFormat == FMT_OTHER)
             {
                mHeaderChoice = S.Id(ID_HEADER_CHOICE)
-                  .AddChoice(XO("Header:"),
+                  .AddChoice(XXO("Header:"),
                              mHeaderNames,
                              mHeaderFromChoice);
             }
             mEncodingChoice = S.Id(ID_ENCODING_CHOICE)
-               .AddChoice(XO("Encoding:"),
+               .AddChoice(XXO("Encoding:"),
                           mEncodingNames,
                           mEncodingFromChoice);
          }

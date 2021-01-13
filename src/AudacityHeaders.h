@@ -31,12 +31,10 @@
 
 #include <wx/wx.h>
 #include <wx/bitmap.h>
-#include <wx/filedlg.h>
 #include <wx/filefn.h>
 #include <wx/image.h>
 #include <wx/ffile.h>
 #include <wx/filename.h>
-#include <wx/progdlg.h>
 #include <wx/textfile.h>
 #include <wx/thread.h>
 #include <wx/tooltip.h>
@@ -75,7 +73,7 @@
 //    #include <wx/msw/msvcrt.h>      // redefines the NEW() operator
 //#endif
 
-#ifdef __WXMSW__
+#ifdef _MSC_VER
 #ifdef _DEBUG
 #define _CRTDBG_MAP_ALLOC
 #include <crtdbg.h>

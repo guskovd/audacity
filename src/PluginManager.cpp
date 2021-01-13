@@ -40,6 +40,7 @@ for shared and private configs - which need to move out.
 #include <wx/utils.h>
 
 #include "audacity/EffectInterface.h"
+#include "audacity/ModuleInterface.h"
 
 #include "FileNames.h"
 #include "ModuleManager.h"
@@ -430,6 +431,7 @@ private:
 
    void OnChangedVisibility(wxCommandEvent & evt);
    void OnSort(wxListEvent & evt);
+   void DoSort( int col );
    void OnListChar(wxKeyEvent & evt);
    void OnOK(wxCommandEvent & evt);
    void OnCancel(wxCommandEvent & evt);
@@ -492,6 +494,8 @@ PluginRegistrationDialog::PluginRegistrationDialog(wxWindow *parent, EffectType 
    mSortDirection = 1;
 
    Populate();
+
+   DoSort( mSortColumn );
 }
 
 void PluginRegistrationDialog::Populate()
@@ -516,7 +520,7 @@ void PluginRegistrationDialog::PopulateOrExchange(ShuttleGui &S)
          {
             S.StartHorizontalLay(wxALIGN_LEFT, 0);
             {
-               S.AddPrompt(XO("Select effects, click the Enable or Disable button, then click OK."));
+               S.AddPrompt(XXO("Select effects, click the Enable or Disable button, then click OK."));
             }
             S.EndHorizontalLay();
 
@@ -531,12 +535,12 @@ void PluginRegistrationDialog::PopulateOrExchange(ShuttleGui &S)
                wxRadioButton *rb;
 
                /* i18n-hint: This is before radio buttons selecting which effects to show */
-               S.AddPrompt(XO("Show:"));
+               S.AddPrompt(XXO("Show:"));
                rb = S.Id(ID_ShowAll)
                   /* i18n-hint: Radio button to show all effects */
                   .Name(XO("Show all"))
                   /* i18n-hint: Radio button to show all effects */
-                  .AddRadioButton(XO("&All"));
+                  .AddRadioButton(XXO("&All"));
 #if wxUSE_ACCESSIBILITY
                // so that name can be set on a standard control
                rb->SetAccessible(safenew WindowAccessible(rb));
@@ -546,7 +550,7 @@ void PluginRegistrationDialog::PopulateOrExchange(ShuttleGui &S)
                   /* i18n-hint: Radio button to show just the currently disabled effects */
                   .Name(XO("Show disabled"))
                   /* i18n-hint: Radio button to show just the currently disabled effects */
-                  .AddRadioButtonToGroup(XO("D&isabled"));
+                  .AddRadioButtonToGroup(XXO("D&isabled"));
 #if wxUSE_ACCESSIBILITY
                // so that name can be set on a standard control
                rb->SetAccessible(safenew WindowAccessible(rb));
@@ -556,7 +560,7 @@ void PluginRegistrationDialog::PopulateOrExchange(ShuttleGui &S)
                   /* i18n-hint: Radio button to show just the currently enabled effects */
                   .Name(XO("Show enabled"))
                   /* i18n-hint: Radio button to show just the currently enabled effects */
-                  .AddRadioButtonToGroup(XO("E&nabled"));
+                  .AddRadioButtonToGroup(XXO("E&nabled"));
 #if wxUSE_ACCESSIBILITY
                // so that name can be set on a standard control
                rb->SetAccessible(safenew WindowAccessible(rb));
@@ -566,7 +570,7 @@ void PluginRegistrationDialog::PopulateOrExchange(ShuttleGui &S)
                   /* i18n-hint: Radio button to show just the newly discovered effects */
                   .Name(XO("Show new"))
                   /* i18n-hint: Radio button to show just the newly discovered effects */
-                  .AddRadioButtonToGroup(XO("Ne&w"));
+                  .AddRadioButtonToGroup(XXO("Ne&w"));
 #if wxUSE_ACCESSIBILITY
                // so that name can be set on a standard control
                rb->SetAccessible(safenew WindowAccessible(rb));
@@ -587,8 +591,8 @@ void PluginRegistrationDialog::PopulateOrExchange(ShuttleGui &S)
 
          S.StartHorizontalLay(wxALIGN_LEFT | wxEXPAND, 0);
          {
-            S.Id(ID_SelectAll).AddButton(XO("&Select All"));
-            S.Id(ID_ClearAll).AddButton(XO("C&lear All"));
+            S.Id(ID_SelectAll).AddButton(XXO("&Select All"));
+            S.Id(ID_ClearAll).AddButton(XXO("C&lear All"));
 
             S.StartHorizontalLay(wxALIGN_CENTER);
             {
@@ -596,8 +600,8 @@ void PluginRegistrationDialog::PopulateOrExchange(ShuttleGui &S)
             }
             S.EndHorizontalLay();
 
-            S.Id(ID_Enable).AddButton(XO("&Enable"));
-            S.Id(ID_Disable).AddButton(XO("&Disable"));
+            S.Id(ID_Enable).AddButton(XXO("&Enable"));
+            S.Id(ID_Disable).AddButton(XXO("&Disable"));
          }
          S.EndHorizontalLay();
       }
@@ -867,7 +871,11 @@ void PluginRegistrationDialog::OnChangedVisibility(wxCommandEvent & evt)
 void PluginRegistrationDialog::OnSort(wxListEvent & evt)
 {
    int col = evt.GetColumn();
+   DoSort( col );
+}
 
+void PluginRegistrationDialog::DoSort( int col )
+{
    if (col != mSortColumn)
    {
       mSortDirection = 1;
@@ -1852,7 +1860,7 @@ bool PluginManager::DropFile(const wxString &fileName)
             auto dstPath = dst.GetFullPath();
             if ( src.FileExists() )
                // A simple one-file plug-in
-               copied = FileNames::CopyFile(
+               copied = FileNames::DoCopyFile(
                   src.GetFullPath(), dstPath, true );
             else {
                // A sub-folder
@@ -1890,10 +1898,13 @@ bool PluginManager::DropFile(const wxString &fileName)
 
             // Ask whether to enable the plug-ins
             if (auto nIds = ids.size()) {
-               auto message = wxPLURAL(
+               auto message = XPC(
+               /* i18n-hint A plug-in is an optional added program for a sound
+                effect, or generator, or analyzer */
                   "Enable this plug-in?\n",
                   "Enable these plug-ins?\n",
-                  0
+                  0,
+                  "plug-ins"
                )( nIds );
                for (const auto &name : names)
                   message.Join( Verbatim( name ), wxT("\n") );

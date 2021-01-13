@@ -205,6 +205,8 @@ void ToolsToolBar::Populate()
    mTool[ slideTool    ] = MakeTool( this, bmpTimeShift, slideTool, XO("Slide Tool") );
    mTool[ multiTool    ] = MakeTool( this, bmpMulti, multiTool, XO("Multi-Tool") );
 
+   // It's OK to reset the tool when regenerating this, e.g after visiting preferences.
+   SetCurrentTool( selectTool );
    mTool[mCurrentTool]->PushDown();
 
    RegenerateTooltips();
@@ -410,7 +412,7 @@ BaseItemSharedPtr ExtraToolsMenu()
 {
    static BaseItemSharedPtr menu{
    ( FinderScope{ findCommandHandler },
-   Menu( wxT("Tools"), XO("T&ools"),
+   Menu( wxT("Tools"), XXO("T&ools"),
       Command( wxT("SelectTool"), XXO("&Selection Tool"), FN(OnSelectTool),
          AlwaysEnabledFlag, wxT("F1") ),
       Command( wxT("EnvelopeTool"), XXO("&Envelope Tool"),

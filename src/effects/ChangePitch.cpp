@@ -282,10 +282,11 @@ void EffectChangePitch::PopulateOrExchange(ShuttleGui & S)
          S.StartMultiColumn(6, wxALIGN_CENTER); // 6 controls, because each AddChoice adds a wxStaticText and a wxChoice.
          {
             m_pChoice_FromPitch = S.Id(ID_FromPitch)
-               /* i18n-hint: changing a quantity "from" one value "to" another */
-               .Name(XO("from"))
+               /* i18n-hint: changing musical pitch "from" one value "to" another */
+               .Name(XC("from", "change pitch"))
                .MinSize( { 80, -1 } )
-               .AddChoice(XO("&from"), pitch);
+            /* i18n-hint: changing musical pitch "from" one value "to" another */
+               .AddChoice(XXC("&from", "change pitch"), pitch);
 
             m_pSpin_FromOctave = S.Id(ID_FromOctave)
                .Name(XO("from Octave"))
@@ -293,10 +294,11 @@ void EffectChangePitch::PopulateOrExchange(ShuttleGui & S)
                .AddSpinCtrl( {}, m_nFromOctave, INT_MAX, INT_MIN);
 
             m_pChoice_ToPitch = S.Id(ID_ToPitch)
-               /* i18n-hint: changing a quantity "from" one value "to" another */
-               .Name(XO("to"))
+               /* i18n-hint: changing musical pitch "from" one value "to" another */
+               .Name(XC("to", "change pitch"))
                .MinSize( { 80, -1 } )
-               .AddChoice(XO("&to"), pitch);
+               /* i18n-hint: changing musical pitch "from" one value "to" another */
+               .AddChoice(XXC("&to", "change pitch"), pitch);
 
             m_pSpin_ToOctave = S.Id(ID_ToOctave)
                .Name(XO("to Octave"))
@@ -313,7 +315,7 @@ void EffectChangePitch::PopulateOrExchange(ShuttleGui & S)
                   2, &m_dSemitonesChange,
                   NumValidatorStyle::TWO_TRAILING_ZEROES
                )
-               .AddTextBox(XO("&Semitones (half-steps):"), wxT(""), 12);
+               .AddTextBox(XXO("&Semitones (half-steps):"), wxT(""), 12);
          }
          S.EndHorizontalLay();
       }
@@ -330,7 +332,7 @@ void EffectChangePitch::PopulateOrExchange(ShuttleGui & S)
                   NumValidatorStyle::THREE_TRAILING_ZEROES,
                   0.0
                )
-               .AddTextBox(XO("f&rom"), wxT(""), 12);
+               .AddTextBox(XXO("f&rom"), wxT(""), 12);
 
             m_pTextCtrl_ToFrequency = S.Id(ID_ToFrequency)
                .Name(XO("to (Hz)"))
@@ -339,7 +341,7 @@ void EffectChangePitch::PopulateOrExchange(ShuttleGui & S)
                   NumValidatorStyle::THREE_TRAILING_ZEROES,
                   0.0
                )
-               .AddTextBox(XO("t&o"), wxT(""), 12);
+               .AddTextBox(XXO("t&o"), wxT(""), 12);
 
             S.AddUnits(XO("Hz"));
          }
@@ -353,7 +355,7 @@ void EffectChangePitch::PopulateOrExchange(ShuttleGui & S)
                   NumValidatorStyle::THREE_TRAILING_ZEROES,
                   MIN_Percentage, MAX_Percentage
                )
-               .AddTextBox(XO("Percent C&hange:"), wxT(""), 12);
+               .AddTextBox(XXO("Percent C&hange:"), wxT(""), 12);
          }
          S.EndHorizontalLay();
 
@@ -372,7 +374,7 @@ void EffectChangePitch::PopulateOrExchange(ShuttleGui & S)
       S.StartMultiColumn(2);
       {
          mUseSBSMSCheckBox = S.Validator<wxGenericValidator>(&mUseSBSMS)
-            .AddCheckBox(XO("&Use high quality stretching (slow)"),
+            .AddCheckBox(XXO("&Use high quality stretching (slow)"),
                                              mUseSBSMS);
       }
       S.EndMultiColumn();

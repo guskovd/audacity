@@ -12,6 +12,8 @@ Paul Licameli split from TrackPanel.cpp
 #include "NoteTrackView.h"
 
 #ifdef USE_MIDI
+#include "../lib-src/header-substitutes/allegro.h"
+
 #include "../../../../Experimental.h"
 
 #include "NoteTrackVRulerControls.h"
@@ -20,6 +22,7 @@ Paul Licameli split from TrackPanel.cpp
 #include "../../../../AColor.h"
 #include "../../../../AllThemeResources.h"
 #include "../../../../HitTestResult.h"
+#include "../../../../Theme.h"
 #include "../../../../TrackArtist.h"
 #include "../../../../TrackPanelDrawingContext.h"
 #include "../../../../TrackPanelMouseEvent.h"

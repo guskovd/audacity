@@ -129,19 +129,20 @@ void DevicePrefs::PopulateOrExchange(ShuttleGui & S)
    S.SetBorder(2);
    S.StartScroller();
 
-   S.StartStatic(XO("Interface"));
+   /* i18n-hint Software interface to audio devices */
+   S.StartStatic(XC("Interface", "device"));
    {
       S.StartMultiColumn(2);
       {
          S.Id(HostID);
-         mHost = S.TieChoice( XO("&Host:"),
+         mHost = S.TieChoice( XXO("&Host:"),
             {
                wxT("/AudioIO/Host"),
                { ByColumns, mHostNames, mHostLabels }
             }
          );
 
-         S.AddPrompt(XO("Using:"));
+         S.AddPrompt(XXO("Using:"));
          S.AddFixedText( Verbatim(wxSafeConvertMB2WX(Pa_GetVersionText() ) ) );
       }
       S.EndMultiColumn();
@@ -153,7 +154,7 @@ void DevicePrefs::PopulateOrExchange(ShuttleGui & S)
       S.StartMultiColumn(2);
       {
          S.Id(PlayID);
-         mPlay = S.AddChoice(XO("&Device:"),
+         mPlay = S.AddChoice(XXO("&Device:"),
                              {} );
       }
       S.EndMultiColumn();
@@ -165,11 +166,11 @@ void DevicePrefs::PopulateOrExchange(ShuttleGui & S)
       S.StartMultiColumn(2);
       {
          S.Id(RecordID);
-         mRecord = S.AddChoice(XO("De&vice:"),
+         mRecord = S.AddChoice(XXO("De&vice:"),
                                {} );
 
          S.Id(ChannelsID);
-         mChannels = S.AddChoice(XO("Cha&nnels:"),
+         mChannels = S.AddChoice(XXO("Cha&nnels:"),
                                  {} );
       }
       S.EndMultiColumn();
@@ -188,7 +189,7 @@ void DevicePrefs::PopulateOrExchange(ShuttleGui & S)
          // for Portaudio v18 we always use default buffer sizes
          w = S
             .NameSuffix(XO("milliseconds"))
-            .TieNumericTextBox(XO("&Buffer length:"),
+            .TieNumericTextBox(XXO("&Buffer length:"),
                                  {wxT("/AudioIO/LatencyDuration"),
                                   DEFAULT_LATENCY_DURATION},
                                  9);
@@ -196,7 +197,7 @@ void DevicePrefs::PopulateOrExchange(ShuttleGui & S)
 
          w = S
             .NameSuffix(XO("milliseconds"))
-            .TieNumericTextBox(XO("&Latency compensation:"),
+            .TieNumericTextBox(XXO("&Latency compensation:"),
                                  {wxT("/AudioIO/LatencyCorrection"),
                                   DEFAULT_LATENCY_CORRECTION},
                                  9);

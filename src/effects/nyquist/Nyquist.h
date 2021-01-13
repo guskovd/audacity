@@ -12,6 +12,7 @@
 #define __AUDACITY_EFFECT_NYQUIST__
 
 #include "../Effect.h"
+#include "../../FileNames.h"
 
 #include "nyx.h"
 
@@ -49,6 +50,7 @@ public:
    wxString name;
    wxString label;
    std::vector<EnumValueSymbol> choices;
+   FileNames::FileTypes fileTypes;
    wxString valStr;
    wxString lowStr;
    wxString highStr;
@@ -93,6 +95,7 @@ public:
    bool DefineParams( ShuttleParams & S ) override;
    bool GetAutomationParameters(CommandParameters & parms) override;
    bool SetAutomationParameters(CommandParameters & parms) override;
+   int SetLispVarsFromParameters(CommandParameters & parms, bool bTestOnly);
 
    // Effect implementation
 
@@ -137,6 +140,10 @@ private:
    wxString EscapeString(const wxString & inStr);
    static std::vector<EnumValueSymbol> ParseChoice(const wxString & text);
 
+   FileExtensions ParseFileExtensions(const wxString & text);
+   FileNames::FileType ParseFileType(const wxString & text);
+   FileNames::FileTypes ParseFileTypes(const wxString & text);
+
    static int StaticGetCallback(float *buffer, int channel,
                                 long start, long len, long totlen,
                                 void *userdata);
@@ -161,7 +168,7 @@ private:
       bool q { false };
       int paren{ 0 };
       wxString tok;
-      wxArrayString tokens;
+      wxArrayStringEx tokens;
 
       bool Tokenize(
          const wxString &line, bool eof,
@@ -169,6 +176,8 @@ private:
    };
    bool Parse(Tokenizer &tokenizer, const wxString &line, bool eof, bool first);
 
+   static TranslatableString UnQuoteMsgid(const wxString &s, bool allowParens = true,
+                           wxString *pExtraString = nullptr);
    static wxString UnQuote(const wxString &s, bool allowParens = true,
                            wxString *pExtraString = nullptr);
    double GetCtrlValue(const wxString &s);
@@ -183,7 +192,7 @@ private:
    void OnTime(wxCommandEvent & evt);
    void OnFileButton(wxCommandEvent & evt);
 
-   void resolveFilePath(wxString & path, wxString extension = {});
+   void resolveFilePath(wxString & path, FileExtension extension = {});
    bool validatePath(wxString path);
    wxString ToTimeFormat(double t);
 
@@ -213,6 +222,7 @@ private:
    bool              mOK;
    TranslatableString mInitError;
    wxString          mInputCmd; // history: exactly what the user typed
+   wxString          mParameters; // The parameters of to be fed to a nested prompt
    wxString          mCmd;      // the command to be processed
    TranslatableString mName;   ///< Name of the Effect (untranslated)
    TranslatableString mPromptName; // If a prompt, we need to remember original name.

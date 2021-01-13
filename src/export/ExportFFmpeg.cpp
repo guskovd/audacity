@@ -26,7 +26,6 @@ function.
 #include <wx/choice.h>
 #include <wx/intl.h>
 #include <wx/timer.h>
-#include <wx/progdlg.h>
 #include <wx/string.h>
 #include <wx/textctrl.h>
 #include <wx/listbox.h>
@@ -55,8 +54,6 @@ function.
 
 // Define this to automatically resample audio to the nearest supported sample rate
 #define FFMPEG_AUTO_RESAMPLE 1
-
-extern FFmpegLibs *FFmpegLibsInst();
 
 static bool CheckFFmpegPresence(bool quiet = false)
 {
@@ -523,7 +520,7 @@ bool ExportFFmpeg::InitCodecs(AudacityProject *project)
    mEncAudioCodecCtx->time_base.num = 1;
    mEncAudioCodecCtx->time_base.den = mEncAudioCodecCtx->sample_rate;
    mEncAudioCodecCtx->sample_fmt = AV_SAMPLE_FMT_S16;
-   mEncAudioCodecCtx->strict_std_compliance = FF_COMPLIANCE_STRICT;
+   mEncAudioCodecCtx->strict_std_compliance = FF_COMPLIANCE_EXPERIMENTAL;
 
    if (mEncAudioCodecCtx->codec_id == AV_CODEC_ID_AC3)
    {

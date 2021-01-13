@@ -23,6 +23,7 @@
 
 #include <wx/log.h>
 #include <wx/slider.h>
+#include <wx/stream.h>
  
 #include <vorbis/vorbisenc.h>
 
@@ -88,7 +89,7 @@ void ExportOGGOptions::PopulateOrExchange(ShuttleGui & S)
          {
             S.SetStretchyCol(1);
             S.Prop(1).TieSlider(
-               XO("Quality:"), mOggQualityUnscaled, 10);
+               XXO("Quality:"), mOggQualityUnscaled, 10);
          }
          S.EndMultiColumn();
       }

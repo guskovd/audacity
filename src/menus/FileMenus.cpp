@@ -23,6 +23,7 @@
 #include "../export/ExportMultiple.h"
 #include "../import/Import.h"
 #include "../import/ImportMIDI.h"
+#include "../import/ImportRaw.h"
 #include "../widgets/AudacityMessageBox.h"
 #include "../widgets/FileHistory.h"
 
@@ -89,7 +90,7 @@ void DoExport( AudacityProject &project, const FileExtension & Format )
    }
    else
    {
-      FileHistory::Global().AddFileToHistory(filename);
+      FileHistory::Global().Append(filename);
       // We're in batch mode, the file does not exist already.
       // We really can proceed without prompting.
       int nChannels = MacroCommands::IsMono( &project ) ? 1 : 2;
@@ -560,7 +561,7 @@ BaseItemSharedPtr FileMenu()
 
    static BaseItemSharedPtr menu{
    ( FinderScope{ findCommandHandler },
-   Menu( wxT("File"), XO("&File"),
+   Menu( wxT("File"), XXO("&File"),
       Section( "Basic",
          /*i18n-hint: "New" is an action (verb) to create a NEW project*/
          Command( wxT("New"), XXO("&New"), FN(OnNew),
@@ -584,10 +585,10 @@ BaseItemSharedPtr FileMenu()
          Menu( wxT("Recent"),
    #ifdef __WXMAC__
             /* i18n-hint: This is the name of the menu item on Mac OS X only */
-            XO("Open Recent")
+            XXO("Open Recent")
    #else
             /* i18n-hint: This is the name of the menu item on Windows and Linux */
-            XO("Recent &Files")
+            XXO("Recent &Files")
    #endif
             ,
             Special( wxT("PopulateRecentFilesStep"),
@@ -595,7 +596,6 @@ BaseItemSharedPtr FileMenu()
                // Recent Files and Recent Projects menus
                auto &history = FileHistory::Global();
                history.UseMenu( &theMenu );
-               history.AddFilesToMenu( &theMenu );
 
                wxWeakRef<wxMenu> recentFilesMenu{ &theMenu };
                wxTheApp->CallAfter( [=] {
@@ -620,7 +620,7 @@ BaseItemSharedPtr FileMenu()
       ),
 
       Section( "Save",
-         Menu( wxT("Save"), XO("&Save Project"),
+         Menu( wxT("Save"), XXO("&Save Project"),
             Command( wxT("Save"), XXO("&Save Project"), FN(OnSave),
                AudioIONotBusyFlag() | UnsavedChangesFlag(), wxT("Ctrl+S") ),
             Command( wxT("SaveAs"), XXO("Save Project &As..."), FN(OnSaveAs),
@@ -638,7 +638,7 @@ BaseItemSharedPtr FileMenu()
       ),
 
       Section( "Import-Export",
-         Menu( wxT("Export"), XO("&Export"),
+         Menu( wxT("Export"), XXO("&Export"),
             // Enable Export audio commands only when there are audio tracks.
             Command( wxT("ExportMp3"), XXO("Export as MP&3"), FN(OnExportMp3),
                AudioIONotBusyFlag() | WaveTracksExistFlag() ),
@@ -672,7 +672,7 @@ BaseItemSharedPtr FileMenu()
    #endif
          ),
 
-         Menu( wxT("Import"), XO("&Import"),
+         Menu( wxT("Import"), XXO("&Import"),
             Command( wxT("ImportAudio"), XXO("&Audio..."), FN(OnImport),
                AudioIONotBusyFlag(), wxT("Ctrl+Shift+I") ),
             Command( wxT("ImportLabels"), XXO("&Labels..."), FN(OnImportLabels),

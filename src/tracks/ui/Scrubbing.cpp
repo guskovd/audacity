@@ -17,7 +17,6 @@ Paul Licameli split from TrackPanel.cpp
 
 #include "../../AudioIO.h"
 #include "../../CommonCommandFlags.h"
-#include "../../Menus.h"
 #include "../../Project.h"
 #include "../../ProjectAudioIO.h"
 #include "../../ProjectAudioManager.h"
@@ -222,7 +221,6 @@ Scrubber::Scrubber(AudacityProject *project)
 #endif
 
    , mProject(project)
-   , mWindow( FindProjectFrame( project ) )
    , mPoller { std::make_unique<ScrubPoller>(*this) }
    , mOptions {}
 
@@ -277,7 +275,7 @@ namespace {
          "Scrubbing" is variable-speed playback, ...
          "Seeking" is normal speed playback but with skips, ...
        */
-      { wxT("Scrub"),       XO("&Scrub"),           XO("Scrubbing"),
+      { wxT("Scrub"),       XXO("&Scrub"),           XO("Scrubbing"),
          CaptureNotBusyFlag() | HasWaveDataFlag(),
          &Scrubber::OnScrub,       false,      &Scrubber::Scrubs,
       },
@@ -286,7 +284,7 @@ namespace {
          "Scrubbing" is variable-speed playback, ...
          "Seeking" is normal speed playback but with skips, ...
        */
-      { wxT("Seek"),        XO("See&k"),            XO("Seeking"),
+      { wxT("Seek"),        XXO("See&k"),            XO("Seeking"),
          CaptureNotBusyFlag() | HasWaveDataFlag(),
          &Scrubber::OnSeek,        true,       &Scrubber::Seeks,
       },
@@ -295,7 +293,7 @@ namespace {
          "Scrubbing" is variable-speed playback, ...
          "Seeking" is normal speed playback but with skips, ...
        */
-      { wxT("ToggleScrubRuler"),            XO("Scrub &Ruler"),   {},
+      { wxT("ToggleScrubRuler"),            XXO("Scrub &Ruler"),   {},
          AlwaysEnabledFlag,
          &Scrubber::OnToggleScrubRuler, false,    &Scrubber::ShowsBar,
       },
@@ -1223,7 +1221,7 @@ BaseItemSharedPtr ToolbarMenu()
    static BaseItemSharedPtr menu { (
    FinderScope{ finder },
    Menu( wxT("Scrubbing"),
-      XO("Scru&bbing"),
+      XXO("Scru&bbing"),
       []{
          BaseItemPtrs ptrs;
          for (const auto &item : menuItems()) {
@@ -1260,10 +1258,12 @@ BaseItemSharedPtr KeyboardScrubbingItems()
    Items( wxT("KeyboardScrubbing"),
       Command(wxT("KeyboardScrubBackwards"), XXO("Scrub Bac&kwards"),
          &Scrubber::OnKeyboardScrubBackwards,
-         CaptureNotBusyFlag() | CanStopAudioStreamFlag(), wxT("U\twantKeyup")),
+         CaptureNotBusyFlag() | CanStopAudioStreamFlag(),
+         Options{ wxT("U") }.WantKeyUp() ),
       Command(wxT("KeyboardScrubForwards"), XXO("Scrub For&wards"),
          &Scrubber::OnKeyboardScrubForwards,
-         CaptureNotBusyFlag() | CanStopAudioStreamFlag(), wxT("I\twantKeyup"))
+         CaptureNotBusyFlag() | CanStopAudioStreamFlag(),
+         Options{ wxT("I") }.WantKeyUp() )
    ) ) };
    return items;
 }

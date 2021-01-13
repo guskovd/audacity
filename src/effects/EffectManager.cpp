@@ -147,16 +147,16 @@ wxString EffectManager::GetCommandUrl(const PluginID & ID)
    return wxEmptyString;
 }
 
-wxString EffectManager::GetCommandTip(const PluginID & ID)
+TranslatableString EffectManager::GetCommandTip(const PluginID & ID)
 {
    Effect* pEff = GetEffect(ID);
    if( pEff )
-      return pEff->GetDescription().Translation();
+      return pEff->GetDescription();
    AudacityCommand * pCom = GetAudacityCommand(ID);
    if( pCom )
-      return pCom->GetDescription().Translation();
+      return pCom->GetDescription();
 
-   return wxEmptyString;
+   return {};
 }
 
 
@@ -192,7 +192,7 @@ void EffectManager::GetCommandDefinition(const PluginID & ID, const CommandConte
    }
    S.AddItem( GetCommandUrl( ID ), "url" );
    // The tip is a translated string!
-   S.AddItem( GetCommandTip( ID ), "tip" );
+   S.AddItem( GetCommandTip( ID ).Translation(), "tip" );
    S.EndStruct();
 }
 
@@ -405,10 +405,10 @@ EffectPresetsDialog::EffectPresetsDialog(wxWindow *parent, Effect *effect)
       S.StartTwoColumn();
       S.SetStretchyCol(1);
       {
-         S.AddPrompt(XO("Type:"));
+         S.AddPrompt(XXO("Type:"));
          mType = S.Id(ID_Type).AddChoice( {}, {}, 0 );
 
-         S.AddPrompt(XO("&Preset:"));
+         S.AddPrompt(XXO("&Preset:"));
          mPresets = S
             .Style( wxLB_SINGLE | wxLB_NEEDED_SB )
             .AddListBox( {} );

@@ -49,11 +49,9 @@ but little else.
 
 #include "audacity/Types.h"
 #include "../Internat.h"
-
-#include "ImportRaw.h" // defines TrackHolders
+#include "../MemoryX.h"
 
 class AudacityProject;
-class wxArrayString;
 class ProgressDialog;
 enum class ProgressResult : unsigned;
 class TrackFactory;
@@ -108,6 +106,9 @@ protected:
    const FileExtensions mExtensions;
 };
 
+
+class WaveTrack;
+using TrackHolders = std::vector< std::vector< std::shared_ptr<WaveTrack> > >;
 
 class ImportFileHandle /* not final */
 {

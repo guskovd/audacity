@@ -27,7 +27,6 @@ KeyConfigPrefs and MousePrefs use.
 #include <wx/defs.h>
 #include <wx/ffile.h>
 #include <wx/intl.h>
-#include <wx/filedlg.h>
 #include <wx/menu.h>
 #include <wx/button.h>
 #include <wx/radiobut.h>
@@ -187,9 +186,9 @@ void KeyConfigPrefs::PopulateOrExchange(ShuttleGui & S)
             S.StartRadioButtonGroup({
                wxT("/Prefs/KeyConfig/ViewBy"),
                {
-                  { wxT("tree"), XO("&Tree") },
-                  { wxT("name"), XO("&Name") },
-                  { wxT("key"), XO("&Key") },
+                  { wxT("tree"), XXO("&Tree") },
+                  { wxT("name"), XXO("&Name") },
+                  { wxT("key"), XXO("&Key") },
                },
                0 // tree
             });
@@ -290,9 +289,9 @@ void KeyConfigPrefs::PopulateOrExchange(ShuttleGui & S)
             .AddWindow(mKey);
 
          /* i18n-hint: (verb)*/
-         mSet = S.Id(SetButtonID).AddButton(XO("&Set"));
+         mSet = S.Id(SetButtonID).AddButton(XXO("&Set"));
          /* i18n-hint: (verb)*/
-         mClear = S.Id(ClearButtonID).AddButton(XO("Cl&ear"));
+         mClear = S.Id(ClearButtonID).AddButton(XXO("Cl&ear"));
       }
       S.EndThreeColumn();
 
@@ -302,9 +301,9 @@ void KeyConfigPrefs::PopulateOrExchange(ShuttleGui & S)
 
       S.StartThreeColumn();
       {
-         S.Id(ImportButtonID).AddButton(XO("&Import..."));
-         S.Id(ExportButtonID).AddButton(XO("&Export..."));
-         S.Id(AssignDefaultsButtonID).AddButton(XO("&Defaults"));
+         S.Id(ImportButtonID).AddButton(XXO("&Import..."));
+         S.Id(ExportButtonID).AddButton(XXO("&Export..."));
+         S.Id(AssignDefaultsButtonID).AddButton(XXO("&Defaults"));
       }
       S.EndThreeColumn();
    }
@@ -319,7 +318,7 @@ void KeyConfigPrefs::PopulateOrExchange(ShuttleGui & S)
 void KeyConfigPrefs::RefreshBindings(bool bSort)
 {
    TranslatableStrings Labels;
-   wxArrayString Categories;
+   TranslatableStrings Categories;
    TranslatableStrings Prefixes;
 
    mNames.clear();
@@ -382,7 +381,7 @@ bool KeyConfigPrefs::ContainsIllegalDups(
 
    for (size_t i{ 0 }; i < mKeys.size(); i++)
    {
-      if (mKeys[i] == EMPTY_SHORTCUT or mKeys[i] == NO_SHORTCUT)
+      if (mKeys[i] == EMPTY_SHORTCUT || mKeys[i] == NO_SHORTCUT)
          continue;
 
       if (seen.count(mKeys[i]) == 0)
@@ -392,7 +391,7 @@ bool KeyConfigPrefs::ContainsIllegalDups(
          IndexesArray checkMe{ seen.at(mKeys[i]) };
          for (int index : checkMe)
          {
-            if (mDefaultKeys[i] == EMPTY_SHORTCUT or
+            if (mDefaultKeys[i] == EMPTY_SHORTCUT ||
                mDefaultKeys[i] != mDefaultKeys[index])
             {
                fMatching = mManager->GetPrefixedLabelFromName(mNames[i]);
@@ -413,7 +412,7 @@ bool KeyConfigPrefs::ContainsIllegalDups(
 //      1. the shortcut for the operation isn't defined already
 //      2. the added shortcut doesn't create illegal shortcut duplicate
 // The names of operations for which the second condition was violated 
-// are returned in a single wxString
+// are returned in a single error message
 TranslatableString KeyConfigPrefs::MergeWithExistingKeys(
    const std::vector<NormalizedKeyString> &toAdd)
 {
@@ -424,8 +423,8 @@ TranslatableString KeyConfigPrefs::MergeWithExistingKeys(
       for (size_t k{ 0 }; k < toAdd.size(); k++)
          if (k == index)
             continue;
-         else if (toAdd[index] == mKeys[k] and
-            (mDefaultKeys[k] == EMPTY_SHORTCUT or
+         else if (toAdd[index] == mKeys[k] &&
+            (mDefaultKeys[k] == EMPTY_SHORTCUT ||
              mDefaultKeys[k] != mDefaultKeys[index]))
             return (int)k;
 
@@ -450,11 +449,13 @@ TranslatableString KeyConfigPrefs::MergeWithExistingKeys(
          {
             TranslatableString name{ mManager->GetKeyFromName(mNames[sRes]).GET(), {} };
             
-            disabledShortcuts += XO("\n   *   \"") +
-               mManager->GetPrefixedLabelFromName(mNames[i]) + 
-               XO("\"  (because the shortcut \'") + name + 
-               XO("\' is used by \"") + mManager->GetPrefixedLabelFromName(mNames[sRes])
-               +XO("\")\n");
+            disabledShortcuts +=
+               XO(
+"\n   *   \"%s\"  (because the shortcut \'%s\' is used by \"%s\")\n")
+                  .Format(
+                     mManager->GetPrefixedLabelFromName(mNames[i]),
+                     name,
+                     mManager->GetPrefixedLabelFromName(mNames[sRes]) );
             
             mManager->SetKeyFromIndex(i, noKey);
          }
@@ -528,8 +529,10 @@ void KeyConfigPrefs::OnImport(wxCommandEvent & WXUNUSED(event))
       mKeys = oldKeys;
 
       // output an error message
-      AudacityMessageBox(XO("The file with the shortcuts contains illegal shortcut duplicates for \"") +
-         fMatching + XO("\" and \"") + sMatching + XO("\".\nNothing is imported."),
+      AudacityMessageBox(
+         XO(
+"The file with the shortcuts contains illegal shortcut duplicates for \"%s\" and \"%s\".\nNothing is imported.")
+            .Format( fMatching, sMatching ),
          XO("Error Importing Keyboard Shortcuts"),
          wxICON_ERROR | wxCENTRE, this);
 
@@ -754,47 +757,70 @@ void KeyConfigPrefs::OnSet(wxCommandEvent & WXUNUSED(event))
       return;
    }
 
-   NormalizedKeyString key { mKey->GetValue() };
-   auto oldname = mView->GetNameByKey(key);
-   auto newname = mView->GetName(mCommandSelected);
+   CommandID newCommand{ mView->GetName(mCommandSelected) };
+   NormalizedKeyString enteredKey{ mKey->GetValue() };
+   NormalizedKeyString newComDefaultKey{ 
+      mManager->GetDefaultKeyFromName(newCommand) };
+   CommandIDs oldCommands;
 
-   // Just ignore it if they are the same
-   if (oldname == newname) {
-      return;
+   // collecting commands competing for the same shortcut
+   for (size_t i{ 0 }; i < mNames.size(); i++)
+   {
+      if (mNewKeys[i] == enteredKey)
+      {
+         // ignore the Set button if the same shortcut is used
+         if (mNames[i] == newCommand)
+            return;
+
+         if (newComDefaultKey == EMPTY_SHORTCUT ||
+            mDefaultKeys[i] != newComDefaultKey)
+         {
+            oldCommands.push_back(mNames[i]);
+         }
+      }
    }
 
    // Prevent same hotkey combination being used twice.
-   if (!oldname.empty()) {
-      auto oldlabel = Verbatim( wxT("%s - %s") )
+   if (!oldCommands.empty()) {
+      auto newlabel = Verbatim( wxT("'%s - %s'") )
          .Format(
-            mManager->GetCategoryFromName(oldname),
-            mManager->GetPrefixedLabelFromName(oldname) );
-      auto newlabel = Verbatim( wxT("%s - %s") )
+            mManager->GetCategoryFromName(newCommand),
+            mManager->GetPrefixedLabelFromName(newCommand) );
+      auto oldlabel = Verbatim(wxT("'%s - %s'"))
          .Format(
-            mManager->GetCategoryFromName(newname),
-            mManager->GetPrefixedLabelFromName(newname) );
+            mManager->GetCategoryFromName(oldCommands[0]),
+            mManager->GetPrefixedLabelFromName(oldCommands[0]));
+
+      for (size_t i{ 1 }; i < oldCommands.size(); i++)
+         oldlabel += XO("\n\n\t and\n\n\t") +
+         Verbatim(wxT("'%s - %s'")).Format(
+            mManager->GetCategoryFromName(oldCommands[i]),
+            mManager->GetPrefixedLabelFromName(oldCommands[i]));
+      
       if (wxCANCEL == AudacityMessageBox(
             XO(
-"The keyboard shortcut '%s' is already assigned to:\n\n\t'%s'\n\nClick OK to assign the shortcut to\n\n\t'%s'\n\ninstead. Otherwise, click Cancel.")
+"The keyboard shortcut '%s' is already assigned to:\n\n\t%s\n\n\nClick OK to assign the shortcut to\n\n\t%s\n\ninstead. Otherwise, click Cancel.")
                .Format(
                   mKey->GetValue(),
                   oldlabel,
                   newlabel
                ),
-            XO("Error"),
+            XO("Warning"),
             wxOK | wxCANCEL | wxICON_STOP | wxCENTRE,
             this))
       {
          return;
       }
-
-      mView->SetKeyByName(oldname, {});
-      mManager->SetKeyFromName(oldname, {});
-      mNewKeys[ make_iterator_range( mNames ).index( oldname ) ] = {};
-
+      
+      for (const auto & command : oldCommands)
+      {
+         mView->SetKeyByName(command, {});
+         mManager->SetKeyFromName(command, {});
+         mNewKeys[make_iterator_range(mNames).index(command)] = {};
+      }
    }
 
-   SetKeyForSelected(key);
+   SetKeyForSelected(enteredKey);
 }
 
 void KeyConfigPrefs::OnClear(wxCommandEvent& WXUNUSED(event))

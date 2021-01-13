@@ -66,6 +66,7 @@ array of Ruler::Label.
 #include "../AllThemeResources.h"
 #include "../Envelope.h"
 #include "../NumberScale.h"
+#include "../Theme.h"
 #include "../ViewInfo.h"
 
 using std::min;
@@ -1673,7 +1674,7 @@ void Ruler::Label::Draw(wxDC&dc, bool twoTone, wxColour c) const
 #else
       dc.SetTextForeground(altColor ? *wxBLUE : *wxBLACK);
 #endif
-
+      dc.SetBackgroundMode(wxTRANSPARENT);
       dc.DrawText(text.Translation(), lx, ly);
    }
 }

@@ -317,7 +317,7 @@ void EffectChangeSpeed::PopulateOrExchange(ShuttleGui & S)
                NumValidatorStyle::THREE_TRAILING_ZEROES,
                MIN_Percentage / 100.0, ((MAX_Percentage / 100.0) + 1)
             )
-            .AddTextBox(XO("&Speed Multiplier:"), wxT(""), 12);
+            .AddTextBox(XXO("&Speed Multiplier:"), wxT(""), 12);
 
          mpTextCtrl_PercentChange = S.Id(ID_PercentChange)
             .Validator<FloatingPointValidator<double>>(
@@ -325,7 +325,7 @@ void EffectChangeSpeed::PopulateOrExchange(ShuttleGui & S)
                NumValidatorStyle::THREE_TRAILING_ZEROES,
                MIN_Percentage, MAX_Percentage
             )
-            .AddTextBox(XO("Percent C&hange:"), wxT(""), 12);
+            .AddTextBox(XXO("Percent C&hange:"), wxT(""), 12);
       }
       S.EndMultiColumn();
 
@@ -347,17 +347,22 @@ void EffectChangeSpeed::PopulateOrExchange(ShuttleGui & S)
          S.AddUnits(XO("Standard Vinyl rpm:"));
 
          mpChoice_FromVinyl = S.Id(ID_FromVinyl)
+            /* i18n-hint: changing speed of audio "from" one value "to" another
+             "rpm" means "revolutions per minute" as on a vinyl record turntable
+             */
             .Name(XO("From rpm"))
             .MinSize( { 100, -1 } )
-            /* i18n-hint: changing a quantity "from" one value "to" another */
-            .AddChoice(XO("&from"), kVinylStrings);
+            /* i18n-hint: changing speed of audio "from" one value "to" another */
+            .AddChoice(XXC("&from", "change speed"), kVinylStrings);
 
          mpChoice_ToVinyl = S.Id(ID_ToVinyl)
-            /* i18n-hint: changing a quantity "from" one value "to" another */
+            /* i18n-hint: changing speed of audio "from" one value "to" another
+             "rpm" means "revolutions per minute" as on a vinyl record turntable
+             */
             .Name(XO("To rpm"))
             .MinSize( { 100, -1 } )
-            /* i18n-hint: changing a quantity "from" one value "to" another */
-            .AddChoice(XO("&to"), kVinylStrings);
+            /* i18n-hint: changing speed of audio "from" one value "to" another */
+            .AddChoice(XXC("&to", "change speed"), kVinylStrings);
       }
       S.EndMultiColumn();
 
@@ -366,7 +371,7 @@ void EffectChangeSpeed::PopulateOrExchange(ShuttleGui & S)
       {
          S.StartMultiColumn(2, wxALIGN_LEFT);
          {
-            S.AddPrompt(XO("C&urrent Length:"));
+            S.AddPrompt(XXO("C&urrent Length:"));
 
             mpFromLengthCtrl = safenew
                   NumericTextCtrl(S.GetParent(), wxID_ANY,
@@ -379,12 +384,12 @@ void EffectChangeSpeed::PopulateOrExchange(ShuttleGui & S)
                                   .MenuEnabled(false));
 
             S.ToolTip(XO("Current length of selection."))
-               /* i18n-hint: changing a quantity "from" one value "to" another */
-               .Name(XO("from"))
+               /* i18n-hint: changing speed of audio "from" one value "to" another */
+               .Name(XC("from", "change speed"))
                .Position(wxALIGN_LEFT)
                .AddWindow(mpFromLengthCtrl);
 
-            S.AddPrompt(XO("&New Length:"));
+            S.AddPrompt(XXO("&New Length:"));
 
             mpToLengthCtrl = safenew
                   NumericTextCtrl(S.GetParent(), ID_ToLength,
@@ -393,8 +398,8 @@ void EffectChangeSpeed::PopulateOrExchange(ShuttleGui & S)
                                  mToLength,
                                  mProjectRate);
 
-            /* i18n-hint: changing a quantity "from" one value "to" another */
-            S.Name(XO("to"))
+            /* i18n-hint: changing speed of audio "from" one value "to" another */
+            S.Name(XC("to", "change speed"))
                .Position(wxALIGN_LEFT)
                .AddWindow(mpToLengthCtrl);
          }

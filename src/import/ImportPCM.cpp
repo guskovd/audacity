@@ -350,14 +350,14 @@ static wxString AskCopyOrEdit()
          S.SetBorder(0);
 
          copyRadio = S.AddRadioButton(
-            XO("Make a &copy of the files before editing (safer)") );
+            XXO("Make a &copy of the files before editing (safer)") );
 
          aliasRadio = S.AddRadioButtonToGroup(
-            XO("Read the files &directly from the original (faster)") );
+            XXO("Read the files &directly from the original (faster)") );
 
          dontAskNextTimeBox = S.AddCheckBox(
-            XO("Don't &warn again and always use my choice above"),
-            wxT("false"));
+            XXO("Don't &warn again and always use my choice above"),
+            false);
       }
       S.EndStatic();
 
@@ -403,6 +403,8 @@ struct id3_tag_deleter {
 };
 using id3_tag_holder = std::unique_ptr<id3_tag, id3_tag_deleter>;
 #endif
+
+using NewChannelGroup = std::vector< std::shared_ptr<WaveTrack> >;
 
 ProgressResult PCMImportFileHandle::Import(TrackFactory *trackFactory,
                                 TrackHolders &outTracks,

@@ -436,6 +436,8 @@ time warp info and AudioIOListener and whether the playback is looped.
 #include <alloca.h>
 #endif
 
+#include "portaudio.h"
+
 #if USE_PORTMIXER
 #include "portmixer.h"
 #endif
@@ -473,6 +475,11 @@ time warp info and AudioIOListener and whether the playback is looped.
 #include "widgets/Warning.h"
 
 #ifdef EXPERIMENTAL_MIDI_OUT
+
+#include "../lib-src/portmidi/pm_common/portmidi.h"
+#include "../lib-src/portmidi/porttime/porttime.h"
+#include "../lib-src/header-substitutes/allegro.h"
+
    #define MIDI_SLEEP 10 /* milliseconds */
    // how long do we think the thread that fills MIDI buffers,
    // if it is separate from the portaudio thread,
@@ -4481,7 +4488,7 @@ int AudioIoCallback::AudioCallback(const void *inputBuffer, void *outputBuffer,
    return mCallbackReturn;
 }
 
-PaStreamCallbackResult AudioIoCallback::CallbackDoSeek()
+int AudioIoCallback::CallbackDoSeek()
 {
    const int token = mStreamToken;
    wxMutexLocker locker(mSuspendAudioThread);

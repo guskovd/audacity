@@ -35,7 +35,6 @@
 #endif
 
 #include <wx/button.h>
-#include <wx/filedlg.h>
 #include <wx/valtext.h>
 #include <wx/log.h>
 #include <wx/wfstream.h>
@@ -270,7 +269,7 @@ ContrastDialog::ContrastDialog(wxWindow * parent, wxWindowID id,
          S.Name(XO("Foreground end time"))
             .AddWindow(mForegroundEndT);
 
-         m_pButton_UseCurrentF = S.Id(ID_BUTTON_USECURRENTF).AddButton(XO("&Measure selection"));
+         m_pButton_UseCurrentF = S.Id(ID_BUTTON_USECURRENTF).AddButton(XXO("&Measure selection"));
          mForegroundRMSText = S.Id(ID_FOREGROUNDDB_TEXT)
             .ConnectRoot(wxEVT_KEY_DOWN,
                          &ContrastDialog::OnChar)
@@ -304,7 +303,7 @@ ContrastDialog::ContrastDialog(wxWindow * parent, wxWindowID id,
          S.Name(XO("Background end time"))
             .AddWindow(mBackgroundEndT);
 
-         m_pButton_UseCurrentB = S.Id(ID_BUTTON_USECURRENTB).AddButton(XO("Mea&sure selection"));
+         m_pButton_UseCurrentB = S.Id(ID_BUTTON_USECURRENTB).AddButton(XXO("Mea&sure selection"));
          mBackgroundRMSText = S.Id(ID_BACKGROUNDDB_TEXT)
             .ConnectRoot(wxEVT_KEY_DOWN,
                          &ContrastDialog::OnChar)
@@ -326,7 +325,7 @@ ContrastDialog::ContrastDialog(wxWindow * parent, wxWindowID id,
             .ConnectRoot(wxEVT_KEY_DOWN,
                          &ContrastDialog::OnChar)
             .AddTextBox( {}, wxT(""), 50);
-         m_pButton_Reset = S.Id(ID_BUTTON_RESET).AddButton(XO("R&eset"));
+         m_pButton_Reset = S.Id(ID_BUTTON_RESET).AddButton(XXO("R&eset"));
 
          label = XO("&Difference:");
          S.AddFixedText(label);
@@ -335,7 +334,7 @@ ContrastDialog::ContrastDialog(wxWindow * parent, wxWindowID id,
             .ConnectRoot(wxEVT_KEY_DOWN,
                          &ContrastDialog::OnChar)
             .AddTextBox( {}, wxT(""), 50);
-         m_pButton_Export = S.Id(ID_BUTTON_EXPORT).AddButton(XO("E&xport..."));
+         m_pButton_Export = S.Id(ID_BUTTON_EXPORT).AddButton(XXO("E&xport..."));
       }
       S.EndMultiColumn();
    }
@@ -435,18 +434,18 @@ namespace {
       return format0.Format( value );
    }
 
-   wxString FormatDifference( float diffdB )
+   TranslatableString FormatDifference( float diffdB )
    {
       if( diffdB != diffdB )   // test for NaN, reliant on IEEE implementation
-         return _("indeterminate");
+         return XO("indeterminate");
       else {
          if( diffdB != std::numeric_limits<float>::infinity() )
             /* i18n-hint: dB abbreviates decibels
              * RMS abbreviates root mean square, a certain averaging method */
-            return wxString::Format(_("%.2f dB RMS"), diffdB);
+            return XO("%.2f dB RMS").Format( diffdB );
          else
             /* i18n-hint: dB abbreviates decibels */
-            return _("Infinite dB difference");
+            return XO("Infinite dB difference");
       }
    }
 
@@ -495,7 +494,7 @@ void ContrastDialog::results()
 
       /* i18n-hint: i.e. difference in loudness at the moment. */
       mDiffText->SetName(_("Current difference"));
-      mDiffText->ChangeValue( FormatDifference( diffdB ) );
+      mDiffText->ChangeValue( FormatDifference( diffdB ).Translation() );
    }
 
    if (mForegroundIsDefined) {

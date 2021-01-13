@@ -24,7 +24,8 @@
 #include "../widgets/NumericTextCtrl.h"
 
 const ComponentInterfaceSymbol EffectSilence::Symbol
-{ XO("Silence") };
+/* i18n-hint: noun */
+{ XC("Silence", "generator") };
 
 namespace{ BuiltinEffectsModule::Registration< EffectSilence > reg; }
 
@@ -70,7 +71,7 @@ void EffectSilence::PopulateOrExchange(ShuttleGui & S)
    {
       S.StartHorizontalLay();
       {
-         S.AddPrompt(XO("&Duration:"));
+         S.AddPrompt(XXO("&Duration:"));
          mDurationT = safenew
             NumericTextCtrl(S.GetParent(), wxID_ANY,
                               NumericConverter::TIME,

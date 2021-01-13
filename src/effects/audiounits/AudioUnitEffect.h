@@ -135,8 +135,8 @@ private:
    bool SetRateAndChannels();
 
    bool CopyParameters(AudioUnit srcUnit, AudioUnit dstUnit);
-   wxString Export(const wxString & path);
-   wxString Import(const wxString & path);
+   TranslatableString Export(const wxString & path);
+   TranslatableString Import(const wxString & path);
    void Notify(AudioUnit unit, AudioUnitParameterID parm);
 
    // Realtime
@@ -171,6 +171,8 @@ private:
 #if defined(HAVE_AUDIOUNIT_BASIC_SUPPORT)
    bool CreatePlain(wxWindow *parent);
 #endif
+
+   bool BypassEffect(bool bypass);
 
 private:
 
@@ -230,7 +232,7 @@ private:
 class AudioUnitEffectsModule final : public ModuleInterface
 {
 public:
-   AudioUnitEffectsModule(ModuleManagerInterface *moduleManager, const wxString *path);
+   AudioUnitEffectsModule(const wxString *path);
    virtual ~AudioUnitEffectsModule();
 
    // ComponentInterface implementation
@@ -271,7 +273,6 @@ public:
    OSType ToOSType(const wxString & type);
 
 private:
-   ModuleManagerInterface *mModMan;
    wxString mPath;
 };
 

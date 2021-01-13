@@ -32,7 +32,7 @@ Paul Licameli split from WaveTrackView.cpp
 
 static WaveTrackSubView::Type sType{
    WaveTrackViewConstants::Spectrum,
-   { wxT("Spectrogram"), XO("&Spectrogram") }
+   { wxT("Spectrogram"), XXO("&Spectrogram") }
 };
 
 static WaveTrackSubViewType::RegisteredType reg{ sType };
@@ -712,7 +712,7 @@ void SpectrogramSettingsHandler::OnSpectrogramSettings(wxCommandEvent &)
    {
    public:
       ViewSettingsDialog(wxWindow *parent, AudacityProject &project,
-         const TranslatableString &title, PrefsDialog::Factories &factories,
+         const TranslatableString &title, PrefsPanel::Factories &factories,
          int page)
          : PrefsDialog(parent, &project, title, factories)
          , mPage(page)
@@ -744,7 +744,7 @@ void SpectrogramSettingsHandler::OnSpectrogramSettings(wxCommandEvent &)
 
    WaveTrack *const pTrack = static_cast<WaveTrack*>(mpData->pTrack);
 
-   PrefsDialog::Factories factories;
+   PrefsPanel::Factories factories;
    // factories.push_back(WaveformPrefsFactory( pTrack ));
    factories.push_back(SpectrumPrefsFactory( pTrack ));
    const int page =
@@ -794,7 +794,7 @@ PopupMenuTable::AttachedItem sAttachment{
                return std::make_unique<Entry>( "SpectrogramSettings",
                   Entry::Item,
                   OnSpectrogramSettingsID,
-                  XO("S&pectrogram Settings..."),
+                  XXO("S&pectrogram Settings..."),
                   (wxCommandEventFunction)
                      (&SpectrogramSettingsHandler::OnSpectrogramSettings),
                   SpectrogramSettingsHandler::Instance(),

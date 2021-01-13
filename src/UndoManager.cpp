@@ -165,7 +165,7 @@ void UndoManager::CalculateSpaceUsage()
 }
 
 wxLongLong_t UndoManager::GetLongDescription(
-   unsigned int n, TranslatableString *desc, wxString *size)
+   unsigned int n, TranslatableString *desc, TranslatableString *size)
 {
    n -= 1; // 1 based to zero based
 
@@ -283,6 +283,7 @@ void UndoManager::PushState(const TrackList * l,
    unsigned int i;
 
    if ( ((flags & UndoPush::CONSOLIDATE) != UndoPush::MINIMAL) &&
+       // compare full translations not msgids!
        lastAction.Translation() == longDescription.Translation() &&
        mayConsolidate ) {
       ModifyState(l, selectedRegion, tags);

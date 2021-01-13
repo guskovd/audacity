@@ -67,6 +67,7 @@ list( APPEND SOURCES
       AboutDialog.h
       AdornedRulerPanel.cpp
       AdornedRulerPanel.h
+      AllThemeResources.cpp
       AllThemeResources.h
       AttachedVirtualFunction.h
       Audacity.h
@@ -172,8 +173,6 @@ list( APPEND SOURCES
       LyricsWindow.cpp
       LyricsWindow.h
       MacroMagic.h
-      Makefile.am
-      Makefile.in
       Matrix.cpp
       Matrix.h
       MemoryX.h
@@ -236,9 +235,10 @@ list( APPEND SOURCES
       RealFFTf48x.h
       RefreshCode.h
       Registrar.h
+      Registry.cpp
+      Registry.h
       Resample.cpp
       Resample.h
-      RevisionIdent.h
       RingBuffer.cpp
       RingBuffer.h
       SampleFormat.cpp
@@ -294,7 +294,9 @@ list( APPEND SOURCES
       TrackPanel.h
       TrackPanelAx.cpp
       TrackPanelAx.h
+      TrackPanelCell.cpp
       TrackPanelCell.h
+      TrackPanelDrawable.cpp
       TrackPanelDrawable.h
       TrackPanelDrawingContext.h
       TrackPanelListener.h
@@ -646,6 +648,7 @@ list( APPEND SOURCES
       import/ImportLOF.cpp
       import/ImportPCM.cpp
       import/ImportPlugin.h
+      import/ImportPlugin.cpp
       import/ImportRaw.cpp
       import/ImportRaw.h
 
@@ -743,6 +746,7 @@ list( APPEND SOURCES
       prefs/PlaybackPrefs.h
       prefs/PrefsDialog.cpp
       prefs/PrefsDialog.h
+      prefs/PrefsPanel.cpp
       prefs/PrefsPanel.h
       prefs/ProjectsPrefs.cpp
       prefs/ProjectsPrefs.h
@@ -787,8 +791,8 @@ list( APPEND SOURCES
       toolbars/SpectralSelectionBar.cpp
       toolbars/SpectralSelectionBar.h
       toolbars/SpectralSelectionBarListener.h
-      toolbars/TimerToolBar.cpp
-      toolbars/TimerToolBar.h
+      toolbars/TimeToolBar.cpp
+      toolbars/TimeToolBar.h
       toolbars/ToolBar.cpp
       toolbars/ToolBar.h
       toolbars/ToolDock.cpp
@@ -924,6 +928,20 @@ list( APPEND SOURCES
       widgets/ErrorDialog.h
       widgets/ExpandingToolBar.cpp
       widgets/ExpandingToolBar.h
+      widgets/FileDialog/FileDialog.cpp
+      widgets/FileDialog/FileDialog.h
+      $<$<BOOL:${wxIS_WIN}>:
+	widgets/FileDialog/win/FileDialogPrivate.cpp
+	widgets/FileDialog/win/FileDialogPrivate.h
+      >
+      $<$<BOOL:${wxIS_MAC}>:
+	widgets/FileDialog/mac/FileDialogPrivate.mm
+	widgets/FileDialog/mac/FileDialogPrivate.h
+      >
+      $<$<BOOL:${wxIS_GTK}>:
+	widgets/FileDialog/gtk/FileDialogPrivate.cpp
+	widgets/FileDialog/gtk/FileDialogPrivate.h
+      >
       widgets/FileHistory.cpp
       widgets/FileHistory.h
       widgets/Grabber.cpp
@@ -997,7 +1015,6 @@ list( APPEND HEADERS
 list( APPEND INCLUDES
    PUBLIC
       ${_PRVDIR}
-      ${topdir}/lib-src/lib-widget-extra
       ${topdir}/include
       ${TARGET_ROOT}
 )
@@ -1053,31 +1070,17 @@ list( APPEND LIBRARIES
    PRIVATE
       ${CMAKE_REQUIRED_LIBRARIES}
       wxWidgets
-      FileDialog
       expat
       lame
       libsndfile
       libsoxr
-      lib-widget-extra
       portaudio-v19
-#      $<$<BOOL:${USE_FFMPEG}>:ibavcodec>
-#      $<$<BOOL:${USE_FFMPEG}>:libavformat>
-#      $<$<BOOL:${USE_FFMPEG}>:libavutil>
       $<$<BOOL:${USE_FFMPEG}>:ffmpeg>
       $<$<BOOL:${USE_LIBID3TAG}>:libid3tag>
-
-      # This flac mess can be resolved by removing the Windows pragmas
-      # in AudacityApp.cpp.
-      $<$<BOOL:${USE_LIBFLAC}>:flac>
-      $<$<BOOL:${USE_LIBFLAC}>:flac++>
       $<$<BOOL:${USE_LIBFLAC}>:libflac>
-
       $<$<BOOL:${USE_LIBMAD}>:libmad>
       $<$<BOOL:${USE_LIBOGG}>:libogg>
       $<$<BOOL:${USE_LIBVORBIS}>:libvorbis>
-#      $<$<BOOL:${USE_LIBVORBIS}>:libvorbis>
-#      $<$<BOOL:${USE_LIBVORBIS}>:libvorbisenc>
-#      $<$<BOOL:${USE_LIBVORBIS}>:libvorbisfile>
       $<$<BOOL:${USE_LIBTWOLAME}>:twolame>
       $<$<BOOL:${USE_LV2}>:lv2>
       $<$<BOOL:${USE_MIDI}>:portmidi>
@@ -1087,19 +1090,11 @@ list( APPEND LIBRARIES
       $<$<BOOL:${USE_SBSMS}>:sbsms>
       $<$<BOOL:${USE_SOUNDTOUCH}>:soundtouch>
       $<$<BOOL:${USE_VAMP}>:libvamp>
-#      $<$<BOOL:${USE_VAMP}>:libvamp-hostsdk>
-      $<$<PLATFORM_ID:Linux,FreeBSD,OpenBSD,NetBSD>:PkgConfig::GLIB>
-      $<$<PLATFORM_ID:Linux,FreeBSD,OpenBSD,NetBSD>:z>
-      $<$<PLATFORM_ID:Linux,FreeBSD,OpenBSD,NetBSD>:pthread>
+      $<$<PLATFORM_ID:Linux,FreeBSD,OpenBSD,NetBSD,CYGWIN>:PkgConfig::GLIB>
+      $<$<PLATFORM_ID:Linux,FreeBSD,OpenBSD,NetBSD,CYGWIN>:PkgConfig::GTK>
+      $<$<PLATFORM_ID:Linux,FreeBSD,OpenBSD,NetBSD,CYGWIN>:z>
+      $<$<PLATFORM_ID:Linux,FreeBSD,OpenBSD,NetBSD,CYGWIN>:pthread>
 )
-
-#
-# If was have cmake 3.16 or higher, we can use precompiled headers, but
-# only use them if ccache is not available
-#
-if( CMAKE_VERSION VERSION_GREATER_EQUAL "3.16" AND NOT CCACHE_PROGRAM )
-   set( PRECOMP AudacityHeaders.h )
-endif()
 
 set( BUILDING_AUDACITY YES )
 set( INSTALL_PREFIX "${_PREFIX}" )
@@ -1225,20 +1220,19 @@ elseif( CMAKE_SYSTEM_NAME MATCHES "Darwin" )
    )
    set_target_property_all( ${TARGET} RUNTIME_OUTPUT_DIRECTORY "${_DESTDIR}" )
 
-   # These sources must be compiled as Objective C++
+   # These sources must be compiled as Objective C++ and excluded
+   # from precompiled header usage
    set_source_files_properties(
       KeyboardCapture.cpp
       effects/EffectUI.cpp
+      effects/VST/VSTControlOSX.mm
+      effects/audiounits/AUControl.mm
       menus/WindowMenus.cpp
+      widgets/FileDialog/mac/FileDialogPrivate.mm
       PROPERTIES
          COMPILE_FLAGS "-x objective-c++"
+         SKIP_PRECOMPILE_HEADERS YES
    )
-
-   # Because of the "misidentified" Objective C++ sources listed above,
-   # we can only use precompiled headers if also using Xcode.
-   if( NOT "${CMAKE_GENERATOR}" MATCHES "Xcode" )
-      set( PRECOMP )
-   endif()
 
    # Add our required frameworks
    list( APPEND LIBRARIES
@@ -1376,8 +1370,22 @@ target_include_directories( ${TARGET} PRIVATE ${INCLUDES} )
 target_link_options( ${TARGET} PRIVATE ${LDFLAGS} )
 target_link_libraries( ${TARGET} PRIVATE ${LIBRARIES} )
 
-if( PRECOMP )
-   target_precompile_headers( ${TARGET} PRIVATE ${PRECOMP} )
+# If was have cmake 3.16 or higher, we can use precompiled headers, but
+# only use them if ccache is not available and the user hasn't disabled
+# it.
+if( CMAKE_VERSION VERSION_GREATER_EQUAL "3.16" AND NOT CCACHE_PROGRAM )
+   cmd_option(
+      ${_OPT}use_pch
+      "Use precompiled headers [yes, no]"
+      YES
+   )
+
+   if( ${_OPT}use_pch )
+      message( STATUS "Using precompiled headers" )
+      target_precompile_headers( ${TARGET} PRIVATE AudacityHeaders.h )
+   else()
+      message( STATUS "Not using precompiled headers" )
+   endif()
 endif()
 
 if( NOT "${CMAKE_GENERATOR}" MATCHES "Xcode|Visual Studio*" )

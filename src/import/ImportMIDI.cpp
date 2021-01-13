@@ -18,7 +18,9 @@
 
 #if defined(USE_MIDI)
 
-//#include "allegro.h"
+
+#include "../lib-src/header-substitutes/allegro.h"
+
 //#include "strparse.h"
 //#include "mfmidi.h"
 
@@ -49,7 +51,7 @@ bool DoImportMIDI( AudacityProject &project, const FilePath &fileName )
          );
       
       ProjectWindow::Get( project ).ZoomAfterImport(pTrack);
-      FileHistory::Global().AddFileToHistory(fileName);
+      FileHistory::Global().Append(fileName);
       return true;
    }
    else

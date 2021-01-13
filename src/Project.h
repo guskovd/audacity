@@ -17,6 +17,7 @@
 
 #include <memory>
 #include <wx/weakref.h> // member variable
+#include <wx/window.h> // MSVC wants this
 
 class wxFrame;
 class wxWindow;
@@ -92,6 +93,11 @@ using AttachedWindows = ClientData::Site<
 
 wxDECLARE_EXPORTED_EVENT(AUDACITY_DLL_API,
                          EVT_TRACK_PANEL_TIMER, wxCommandEvent);
+
+// This event is emitted by the application object when there is a change
+// in the activated project
+wxDECLARE_EXPORTED_EVENT(AUDACITY_DLL_API,
+                         EVT_PROJECT_ACTIVATION, wxCommandEvent);
 
 ///\brief The top-level handle to an Audacity project.  It serves as a source
 /// of events that other objects can bind to, and a container of associated

@@ -46,6 +46,7 @@ audio tracks.
 #include "AColor.h"
 #include "AllThemeResources.h"
 #include "prefs/GUIPrefs.h"
+#include "Theme.h"
 #include "Track.h"
 #include "TrackPanelDrawingContext.h"
 #include "ViewInfo.h"
@@ -234,13 +235,6 @@ void TrackArt::DrawNegativeOffsetTrackArrows(
                 rect.x + 2, rect.y + rect.height - 8,
                 rect.x + 6, rect.y + rect.height - 12);
 }
-
-
-#ifdef __GNUC__
-#define CONST
-#else
-#define CONST const
-#endif
 
 
 #ifdef USE_MIDI

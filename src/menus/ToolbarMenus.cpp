@@ -18,14 +18,11 @@ struct Handler : CommandHandlerObject {
 
 void OnResetToolBars(const CommandContext &context)
 {
-   auto &project = context.project;
-   auto &toolManager = ToolManager::Get( project );
-
-   toolManager.Reset();
-   MenuManager::Get(project).ModifyToolbarMenus(project);
+   ToolManager::OnResetToolBars(context);
 }
 
 }; // struct Handler
+
 
 } // namespace
 
@@ -43,7 +40,7 @@ static CommandHandlerObject &findCommandHandler(AudacityProject &) {
 namespace{
 using namespace MenuTable;
 
-auto ToolbarCheckFn( int toolbarId ) -> CommandListEntry::CheckFn
+auto ToolbarCheckFn( int toolbarId ) -> CommandManager::CheckFn
 {
    return [toolbarId](AudacityProject &project){
       auto &toolManager = ToolManager::Get( project );
@@ -58,7 +55,7 @@ BaseItemSharedPtr ToolbarsMenu()
    static BaseItemSharedPtr menu{
    ( FinderScope{ findCommandHandler },
    Section( wxT("Toolbars"),
-      Menu( wxT("Toolbars"), XO("&Toolbars"),
+      Menu( wxT("Toolbars"), XXO("&Toolbars"),
          Section( "Reset",
             /* i18n-hint: (verb)*/
             Command( wxT("ResetToolbars"), XXO("Reset Toolb&ars"),

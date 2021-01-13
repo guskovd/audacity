@@ -72,7 +72,6 @@
 #include <wx/log.h>
 #include <wx/filefn.h>
 #include <wx/hash.h>
-#include <wx/progdlg.h>
 #include <wx/timer.h>
 #include <wx/intl.h>
 #include <wx/file.h>
@@ -876,7 +875,7 @@ wxFileNameWrapper DirManager::MakeBlockFilePath(const wxString &value) {
 
       if(!dir.DirExists() && !dir.Mkdir(0777,wxPATH_MKDIR_FULL))
       { // need braces to avoid compiler warning about ambiguous else, see the macro
-         wxLogSysError(_("mkdir in DirManager::MakeBlockFilePath failed."));
+         wxLogSysError(wxT("mkdir in DirManager::MakeBlockFilePath failed."));
       }
    }
    return dir;
@@ -907,7 +906,7 @@ bool DirManager::AssignFile(wxFileNameWrapper &fileName,
          wxString collision;
          checkit.GetFirst(&collision,filespec);
 
-         wxLogWarning(_("Audacity found an orphan block file: %s. \nPlease consider saving and reloading the project to perform a complete project check."),
+         wxLogWarning(wxT("Audacity found an orphan block file: %s. \nPlease consider saving and reloading the project to perform a complete project check."),
                       collision);
 
          return FALSE;
@@ -1284,7 +1283,7 @@ BlockFilePtr DirManager::CopyBlockFile(const BlockFilePtr &b)
       //a summary file, so we should check before we copy.
       if(b->IsSummaryAvailable())
       {
-         if( !FileNames::CopyFile(fn.GetFullPath(),
+         if( !FileNames::DoCopyFile(fn.GetFullPath(),
                   newFile.GetFullPath()) )
             // Disk space exhaustion, maybe
             throw FileException{
@@ -1424,7 +1423,7 @@ std::pair<bool, FilePath> DirManager::LinkOrCopyToNewProjectDirectory(
             success = FileNames::HardLinkFile( oldPath, newPath );
          if (!success)
              link = false,
-             success = FileNames::CopyFile( oldPath, newPath );
+             success = FileNames::DoCopyFile( oldPath, newPath );
          if (!success)
             return { false, {} };
       }
@@ -1455,7 +1454,7 @@ std::pair<bool, FilePath> DirManager::LinkOrCopyToNewProjectDirectory(
          //if it doesn't, we can assume it was written to the NEW name, which is fine.
          if (oldFileName.FileExists())
          {
-            bool ok = FileNames::CopyFile(oldPath, newPath);
+            bool ok = FileNames::DoCopyFile(oldPath, newPath);
             if (!ok)
                return { false, {} };
          }
@@ -1496,7 +1495,7 @@ bool DirManager::EnsureSafeFilename(const wxFileName &fName)
    wxFile testFile(renamedFullPath, wxFile::write);
    if (!testFile.IsOpened()) {
       { // need braces to avoid compiler warning about ambiguous else, see the macro
-         wxLogSysError(_("Unable to open/create test file."),
+         wxLogSysError(wxT("Unable to open/create test file."),
                renamedFullPath);
       }
       return false;
@@ -1508,7 +1507,7 @@ bool DirManager::EnsureSafeFilename(const wxFileName &fName)
    if (!wxRemoveFile(renamedFullPath)) {
       { // need braces to avoid compiler warning about ambiguous else, see the macro
          /* i18n-hint: %s is the name of a file.*/
-         wxLogSysError(_("Unable to remove '%s'."),
+         wxLogSysError(wxT("Unable to remove '%s'."),
             renamedFullPath);
       }
       return false;
@@ -1549,7 +1548,7 @@ bool DirManager::EnsureSafeFilename(const wxFileName &fName)
          // just in case!!!
 
          // Print error message and cancel the export
-         wxLogSysError(_("Unable to rename '%s' to '%s'."),
+         wxLogSysError(wxT("Unable to rename '%s' to '%s'."),
                        fullPath,
                        renamedFullPath);
 
@@ -1620,7 +1619,7 @@ void DirManager::FindMissingAliasFiles(
    iter = missingAliasFilesPathHash.begin();
    while (iter != missingAliasFilesPathHash.end())
    {
-      wxLogWarning(_("Missing aliased audio file: '%s'"), iter->first);
+      wxLogWarning(wxT("Missing aliased audio file: '%s'"), iter->first);
       ++iter;
    }
 }
@@ -1644,7 +1643,7 @@ void DirManager::FindMissingAUFs(
             if (!fileName.FileExists())
             {
                missingAUFHash[key] = b;
-               wxLogWarning(_("Missing alias (.auf) block file: '%s'"),
+               wxLogWarning(wxT("Missing alias (.auf) block file: '%s'"),
                             fileName.GetFullPath());
             }
          }
@@ -1674,7 +1673,7 @@ void DirManager::FindMissingAUs(
                 wxFile{ path }.Length() == 0)
             {
                missingAUHash[key] = b;
-               wxLogWarning(_("Missing data block file: '%s'"), path);
+               wxLogWarning(wxT("Missing data block file: '%s'"), path);
             }
          }
       }
@@ -1717,7 +1716,7 @@ void DirManager::FindOrphanBlockFiles(
       }
    }
    for ( const auto &orphan : orphanFilePathArray )
-      wxLogWarning(_("Orphan block file: '%s'"), orphan);
+      wxLogWarning(wxT("Orphan block file: '%s'"), orphan);
 }
 
 

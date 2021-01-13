@@ -23,6 +23,10 @@
 #include "../ClientData.h"
 #include "ToolDock.h"
 
+#include "../commands/CommandFunctors.h"
+#include "../commands/CommandManager.h"
+
+
 class wxCommandEvent;
 class wxFrame;
 class wxMouseEvent;
@@ -57,10 +61,12 @@ class ToolManager final
    static ToolManager &Get( AudacityProject &project );
    static const ToolManager &Get( const AudacityProject &project );
 
-   ToolManager( AudacityProject *parent, wxWindow *topDockParent );
+   ToolManager( AudacityProject *parent );
    ToolManager( const ToolManager & ) PROHIBITED;
    ToolManager &operator=( const ToolManager & ) PROHIBITED;
    ~ToolManager();
+
+   void CreateWindows();
 
    void LayoutToolBars();
 
@@ -80,6 +86,8 @@ class ToolManager final
    const ToolDock *GetBotDock() const;
 
    void Reset();
+   static void OnResetToolBars(const CommandContext &context);
+
    void Destroy();
    void RegenerateTooltips();
 
@@ -210,8 +218,6 @@ public:
 };
 
 
-#include "../commands/CommandFunctors.h"
-#include "../commands/CommandManager.h"
 
 // Construct a static instance of this class to add a menu item that shows and
 // hides a toolbar
